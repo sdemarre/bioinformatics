@@ -1,22 +1,16 @@
 (in-package :bioinformatics)
 
-(defun read-file-lines (filename)
-  (iter (for line in-file filename using #'read-line)
-	(collect line)))
-
-(defun subseq-of-length (seq start length)
-  (subseq seq start (+ start length)))
-(defun most-frequent-kmer (genome k)
-  (let ((kmer-freq (make-hash-table :test #'equal)))
-    (let ((max-freq (iter (for position from 0 to (- (length genome) k))
-			  (let ((kmer (subseq-of-length genome position k)))
-			    (maximizing (incf (gethash kmer kmer-freq 0)))))))
-      (list
-       (iter (for (kmer freq) in-hashtable kmer-freq)
-	     (when (= freq max-freq)
-	       (collect kmer)))
-       max-freq))))
-
+(defun most-frequent-kmer (genome kmer-length)
+  (let* ((kmer-freq-hash (make-hash-table :test #'equal))
+	 (max-kmer-freq 
+	  (iter (for position from 0 to (- (length genome) kmer-length))
+		(let ((kmer (subseq-of-length genome position kmer-length)))
+		  (maximizing (incf (gethash kmer kmer-freq-hash 0)))))))
+    (values
+     (iter (for (kmer freq) in-hashtable kmer-freq-hash)
+	   (when (= freq max-kmer-freq)
+	     (collect kmer)))
+     max-kmer-freq)))
 
 (defun count-kmer (genome kmer)
   (iter (for position from 0 to (- (length genome) (length kmer)))

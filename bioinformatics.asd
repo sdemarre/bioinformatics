@@ -7,6 +7,8 @@
   :serial t
   :depends-on (:iterate :alexandria)
   :components ((:file "package")
+	       (:file "utils")
                (:file "bioinformatics")
 	       (:file "week-1")))
+
 
