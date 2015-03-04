@@ -9,7 +9,7 @@
 (defun read-file-lines (filename)
   "list of lines from file"
   (iter (for line in-file filename using #'read-line)
-	(collect line)))
+	(collect (maybe-trim-eol line))))
 
 (defun subseq-of-length (seq start length)
   (subseq seq start (+ start length)))
@@ -58,3 +58,36 @@ returns a list of positions in the genome where kmer was found."
 	 (kmer (first lines))
 	 (genome (second lines)))
     (find-pattern-occurences genome kmer)))
+
+(defparameter *codon-amino-data*
+  '(("Isoleucine" "I" ("ATT" "ATC" "ATA"))
+    ("Leucine" "L" ("CTT" "CTC" "CTA" "CTG" "TTA" "TTG"))
+    ("Valine" "V" ("GTT" "GTC" "GTA" "GTG"))
+    ("Phenylalanine" "F" ("TTT" "TTC"))
+    ("Methionine" "M" ("ATG"))
+    ("Cysteine" "C" ("TGT" "TGC"))
+    ("Alanine" "A" ("GCT" "GCC" "GCA" "GCG"))
+    ("Glycine" "G" ("GGT" "GGC" "GGA" "GGG"))
+    ("Proline" "P"  ("CCT" "CCC" "CCA" "CCG"))
+    ("Threonine" "T" ("ACT" "ACC" "ACA" "ACG"))
+    ("Serine" "S" ("TCT" "TCC" "TCA" "TCG" "AGT" "AGC"))
+    ("Tyrosine" "Y" ("TAT" "TAC"))
+    ("Tryptophan" "W" ("TGG"))
+    ("Glutamine" "Q" ("CAA" "CAG"))
+    ("Asparagine" "N" ("AAT" "AAC"))
+    ("Histidine" "H" ("CAT" "CAC"))
+    ("Glutamic acid" "E" ("GAA" "GAG"))
+    ("Aspartic acid" "D" ("GAT" "GAC"))
+    ("Lysine" "K" ("AAA" "AAG"))
+    ("Arginine" "R" ("CGT" "CGC" "CGA" "CGG" "AGA" "AGG"))
+    ("Stop codon" "Stop" ("TAA" "TAG" "TGA"))))
+
+
+(defparameter *codon-amino-hash* (progn (let ((result (make-hash-table :test #'equal)))
+					  (iter (for (name code codons) in *codon-amino-data*)
+						(iter (for codon in codons)
+						      (setf (gethash codon result) (list name code))))
+					  result)))
+
+(defun codon-to-amino (codon)
+  (second (gethash codon *codon-amino-hash*)))
