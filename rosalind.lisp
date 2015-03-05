@@ -19,14 +19,13 @@
     (reverse-complement dna)))
 
 
-(defun ros-fib (generations pairs-per-litter fnm2 fnm1)
+(defun ros-fib (generations pairs-per-litter &optional (fnm2 1) (fnm1 1))
   (cond ((= generations 0) fnm1)
 	((= generations 1) fnm2)
 	(t (ros-fib (1- generations) pairs-per-litter fnm1 (+ fnm1 (* pairs-per-litter fnm2))))))
 (defun rosalind-fib ()
-  (let ((data (first (read-file-lines "rosalind_fib.txt"))))
-    (destructuring-bind (generations pairs-per-litter) (split-sequence:split-sequence #\Space data)
-      (ros-fib (parse-integer generations) (parse-integer pairs-per-litter) 1 1))))
+  (destructuring-bind-integers  (generations pairs-per-litter) (first (read-file-lines "rosalind_fib.txt"))
+    (ros-fib generations pairs-per-litter)))
 
 (defun rosalind-gc-content (dna)
   (* 1.0 (/ (iter (for letter in-vector dna)
@@ -85,3 +84,27 @@
 	    (with-output-to-string (s)
 	      (let ((*standard-output* s))
 		(ROSALIND-CONSENSUS-AND-PROFILE-PRINT))))))
+
+(defun print-generation (generation generation-counts)
+  (format t "~a: ~{~a~^ ~}~%" generation (coerce generation-counts 'list)))
+
+(defun mortal-rabits (generations pair-lifetime &optional (pairs-per-litter 1) (initial-pairs 1) print)
+  (let ((generation-counts (make-array (list pair-lifetime) :initial-element 0)))
+    (setf (elt generation-counts 0) initial-pairs)
+    (iter (repeat (1- generations))
+	  (for generation from 0)
+	  (when print
+	    (print-generation generation generation-counts))
+	  (let ((new-pair-count (* pairs-per-litter (iter (for gen-count-idx from 1 to (1- pair-lifetime))
+							  (summing (elt generation-counts gen-count-idx))))))
+	    (iter (for gen-count-idx from (1- pair-lifetime) downto 1)
+		  (setf (elt generation-counts gen-count-idx) (elt generation-counts (1- gen-count-idx))))
+	    (setf (elt generation-counts 0) new-pair-count)))
+    (when print
+      (print-generation generations generation-counts))
+    (iter (for count in-vector generation-counts)
+	  (sum count))))
+(defun rosalind-mortal-rabits ()
+  (destructuring-bind-integers (generations pair-lifetime)
+      (first (read-file-lines "rosalind_fibd.txt"))
+    (mortal-rabits generations pair-lifetime)))
