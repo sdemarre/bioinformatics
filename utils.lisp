@@ -124,7 +124,7 @@ returns a list of positions in the genome where kmer was found."
 	(dna-strings (make-hash-table :test #'equal)))
     (iter (for line in lines)
 	  (if (fasta-name-line-p line)
-	      (setf name line)	 
+	      (setf name (subseq line 1)) ;; get rid of initial #\>
 	      (push line (gethash name dna-strings))))
     (iter (for (key value) in-hashtable dna-strings)
 	  (collect (list key (combine-strings value))))))
@@ -146,5 +146,21 @@ returns a list of positions in the genome where kmer was found."
 		      ((char= #\G letter) (incf (elt g-counts index))))))
     (list a-counts t-counts c-counts g-counts)))
 
-(defun consensus (dna-strings profile-matrix)
-  )
+(defun consensus (profile-matrix)
+  (destructuring-bind (a-counts t-counts c-counts g-counts) profile-matrix
+    (iter (for index index-of-vector a-counts)
+	  (collect
+	      (iter (for letter-data in (list (cons #\A (elt a-counts index))
+					      (cons #\T (elt t-counts index))
+					      (cons #\C (elt c-counts index))
+					      (cons #\G (elt g-counts index))))
+		    (finding (car letter-data) maximizing (cdr letter-data)))))))
+
+
+(defun fib (n)
+  (let ((fn-1 1)
+	(fn-2 0))
+    (iter (for i from 1 to n)
+	  (psetf fn-2 fn-1
+		 fn-1 (+ fn-1 fn-2)))
+    fn-2))
