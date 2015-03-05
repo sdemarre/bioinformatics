@@ -127,7 +127,7 @@ returns a list of positions in the genome where kmer was found."
 	      (setf name (subseq line 1)) ;; get rid of initial #\>
 	      (push line (gethash name dna-strings))))
     (iter (for (key value) in-hashtable dna-strings)
-	  (collect (list key (combine-strings value))))))
+	  (collect (list key (combine-strings (reverse value)))))))
 (defun read-fasta-lines (filename)
   (let ((lines (read-file-lines filename)))
     (fasta-combine-lines lines)))

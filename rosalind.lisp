@@ -83,11 +83,10 @@
     (format f
 	    (with-output-to-string (s)
 	      (let ((*standard-output* s))
-		(ROSALIND-CONSENSUS-AND-PROFILE-PRINT))))))
+		(rosalind-consensus-and-profile-print))))))
 
 (defun print-generation (generation generation-counts)
   (format t "~a: ~{~a~^ ~}~%" generation (coerce generation-counts 'list)))
-
 (defun mortal-rabits (generations pair-lifetime &optional (pairs-per-litter 1) (initial-pairs 1) print)
   (let ((generation-counts (make-array (list pair-lifetime) :initial-element 0)))
     (setf (elt generation-counts 0) initial-pairs)
