@@ -18,6 +18,32 @@
   (let ((dna (first (read-file-lines "rosalind_revc.txt"))))
     (reverse-complement dna)))
 
+(defun rosalind-multiple-substrings ()
+  (let ((lines (read-file-lines "rosalind_ini3.txt")))
+    (destructuring-bind-integers (start1 end1 start2 end2) (second lines)
+      (format nil "~a ~a" (subseq (first lines) start1 (1+ end1)) (subseq (first lines) start2 (1+ end2))))))
+
+(defun rosalind-sum-odd-ints ()
+  (let ((lines (read-file-lines "rosalind_ini4.txt")))
+    (destructuring-bind-integers (a b) (first lines)
+      (iter (for i from a to b)
+	    (when (oddp i)
+	      (summing i))))))
+
+(defun rosalind-even-lines-from-file ()
+  (let ((lines (read-file-lines "rosalind_ini5.txt")))
+    (iter (for line in lines)
+	  (for line-number from 1)
+	  (when (evenp line-number)
+	    (format t "~a~%" line)))))
+
+(defun rosalind-count-words ()
+  (let ((lines (read-file-lines "rosalind_ini6.txt"))
+	(word-counts (make-hash-table :test #'equal)))
+    (iter (for word in (split-sequence:split-sequence #\Space (first lines)))
+	  (incf (gethash word word-counts 0)))
+    (iter (for (word count) in-hashtable word-counts)
+	  (format t "~a ~a~%" word count))))
 
 (defun ros-fib (generations pairs-per-litter &optional (fnm2 1) (fnm1 1))
   (cond ((= generations 0) fnm1)
@@ -35,7 +61,6 @@
   (let ((lines (read-fasta-lines "rosalind_gc.txt")))
     (iter (for (name dna) in lines)
 	  (finding (list name (* 100 (rosalind-gc-content dna))) maximizing (rosalind-gc-content dna)))))
-
 
 (defun hamming-distance (dna1 dna2)
   (iter (for letter1 in-vector dna1)
@@ -134,7 +159,7 @@
   (iter (for pos-1 from substr-start)
 	(for pos-2 from position)
 	(repeat substr-length)
-	(always (char= (elt dna-string-1 pos-1) (elt dna-string-2 pos-2))))))
+	(always (char= (elt dna-string-1 pos-1) (elt dna-string-2 pos-2)))))
 (defun has-common-substr (dna-string-1 substr-start substr-length dna-string-2)
   (iter (for pos-2 from 0 to (- (length dna-string-2) substr-length))
 	(thereis (has-common-substr-at dna-string-1 substr-start substr-length dna-string-2 pos-2))))
