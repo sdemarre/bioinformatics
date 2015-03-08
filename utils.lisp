@@ -168,3 +168,6 @@ returns a list of positions in the genome where kmer was found."
 (defmacro destructuring-bind-integers (vars expr &body body)
   `(destructuring-bind ,vars (mapcar #'parse-integer (split-sequence:split-sequence #\Space ,expr))
      ,@body))
+
+(defun integer-list (string)
+  (mapcar #'parse-integer (split-sequence:split-sequence #\Space string)))

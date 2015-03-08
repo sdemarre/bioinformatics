@@ -9,7 +9,9 @@
   :components ((:file "package")
 	       (:file "utils")
                (:file "bioinformatics")
-	       (:file "rosalind")
+	       (:file "rosalind/rosalind")
+	       (:file "rosalind/python-village")
+	       (:file "rosalind/bioinformatics-stronghold")
 	       (:file "week-1")))
 
 
