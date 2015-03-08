@@ -31,10 +31,10 @@
     first))
 (defun position-binary-search (element sorted-array compare)
   (let ((pos (binary-search sorted-array #'(lambda (e) (funcall compare e element)))))
-    (when (and (< pos (1- (length sorted-array)))
+    (when (and (< pos (length sorted-array))
 	       (= (elt sorted-array pos) element))
       pos)))
-(define-rosalind-problem :bins "rosalind_bins.txt" ros-binary-search
+(define-rosalind-problem :bins "rosalind_bins.txt" rosalind-binary-search
   (let* ((lines (read-file-lines input-filename))
 	 (sorted-array (coerce (integer-list (third lines)) 'vector))
 	 (elements-to-find (integer-list (fourth lines))))
@@ -42,5 +42,5 @@
       (format output "~{~a~^ ~}~%"
 	      (iter (for element in elements-to-find)
 		    (collect (let ((pos (position-binary-search element sorted-array #'<)))
-			       (if pos (1+ pos) -1))))))))
+		      	       (if pos (1+ pos) -1))))))))
 
