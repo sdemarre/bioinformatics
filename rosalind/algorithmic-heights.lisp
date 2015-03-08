@@ -35,6 +35,7 @@
 	       (= (elt sorted-array pos) element))
       pos)))
 (define-rosalind-problem :bins "rosalind_bins.txt" rosalind-binary-search
+  "binary search"
   (let* ((lines (read-file-lines input-filename))
 	 (sorted-array (coerce (integer-list (third lines)) 'vector))
 	 (elements-to-find (integer-list (fourth lines))))
@@ -44,3 +45,16 @@
 		    (collect (let ((pos (position-binary-search element sorted-array #'<)))
 		      	       (if pos (1+ pos) -1))))))))
 
+(define-rosalind-problem :deg "rosalind_deg.txt" degree-array
+  "degree array"
+  (let ((vertex-data (make-hash-table))
+	(lines (read-file-lines input-filename)))
+    (destructuring-bind-integers (vertex-count edge-count) (first lines)
+      (declare (ignorable edge-count))
+      (iter (for line in (rest lines))
+	    (destructuring-bind-integers (source-vertex target-vertex) line
+	      (incf (gethash target-vertex vertex-data 0))
+	      (incf (gethash source-vertex vertex-data 0))))
+      (format t "~{~a~^ ~}~%"
+	      (iter (for vertex from 1 to vertex-count)
+		    (collect (gethash vertex vertex-data)))))))
