@@ -40,21 +40,43 @@
 	 (sorted-array (coerce (integer-list (third lines)) 'vector))
 	 (elements-to-find (integer-list (fourth lines))))
     (with-output-to-file (output)
-      (format output "~{~a~^ ~}~%"
+      (print-integer-list
 	      (iter (for element in elements-to-find)
 		    (collect (let ((pos (position-binary-search element sorted-array #'<)))
 		      	       (if pos (1+ pos) -1))))))))
 
+(defun make-adjacency-list (lines &optional (graph-type :undirected))
+  (let ((adjacency-list (make-hash-table)))
+    (iter (for line in (rest lines))
+	  (destructuring-bind-integers (source-vertex target-vertex) line
+	    (push source-vertex (gethash target-vertex adjacency-list))
+	    (unless (eq graph-type :directed)
+	      (push target-vertex (gethash source-vertex adjacency-list)))))
+    adjacency-list))
+(defun make-degree-array (adjacency-list number-vertices)
+  (let ((degree-array (make-array number-vertices)))
+    (iter (for vertex from 1 to number-vertices)
+	  (for vertex-index from 0)
+	  (setf (elt degree-array vertex-index) (length (gethash vertex adjacency-list))))
+    degree-array))
 (define-rosalind-problem :deg "rosalind_deg.txt" degree-array
   "degree array"
-  (let ((vertex-data (make-hash-table))
-	(lines (read-file-lines input-filename)))
-    (destructuring-bind-integers (vertex-count edge-count) (first lines)
-      (declare (ignorable edge-count))
-      (iter (for line in (rest lines))
-	    (destructuring-bind-integers (source-vertex target-vertex) line
-	      (incf (gethash target-vertex vertex-data 0))
-	      (incf (gethash source-vertex vertex-data 0))))
-      (format t "~{~a~^ ~}~%"
-	      (iter (for vertex from 1 to vertex-count)
-		    (collect (gethash vertex vertex-data)))))))
+  (let* ((lines (read-file-lines input-filename))
+	 (adjacency-list (make-adjacency-list lines)))
+    (destructuring-bind-integers (number-vertices number-edges) (first lines)
+      (declare (ignorable number-edges))
+      (print-integer-list
+	      (iter (for degree in-vector (make-degree-array adjacency-list number-vertices))
+		    (collect degree))))))
+
+(define-rosalind-problem :ddeg "rosalind_ddeg.txt" double-degree-array
+  "double-degree array"
+  (let* ((lines (read-file-lines input-filename))
+	 (adjacency-list (make-adjacency-list lines)))
+    (destructuring-bind-integers (number-vertices number-edges) (first lines)
+      (declare (ignorable number-edges))
+      (let ((degree-array (make-degree-array adjacency-list number-vertices)))
+	(print-integer-list
+		(iter (for vertex from 1 to number-vertices)
+		      (collect (iter (for neighbour in (gethash vertex adjacency-list))
+				     (summing (elt degree-array (1- neighbour)))))))))))

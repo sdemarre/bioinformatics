@@ -1,4 +1,4 @@
-(in-package :rosalind)
+(in-package :bioinformatics)
 
 (define-rosalind-problem :ini3 "rosalind_ini3.txt" multiple-substrings
   "strings and lists"

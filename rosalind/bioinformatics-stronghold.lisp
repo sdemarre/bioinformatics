@@ -184,3 +184,20 @@
 	 (k (parse-integer (second lines))))
     (with-output-to-file (s)
       (do-for-all-kmers monomer-vector k #'(lambda (v) (format s "~a~%" (coerce v 'string)))))))
+
+(define-rosalind-problem :grph "rosalind_grph.txt" overlap-graphs
+  "overlap graphs"
+  (let ((fasta-data (read-fasta-lines input-filename))
+	(entries-with-prefix (make-hash-table :test #'equal))
+	(entries-with-postfix (make-hash-table :test #'equal)))
+    (iter (for (fasta-id sequence) in fasta-data)
+	  (let ((prefix (subseq-of-length sequence 0 3))
+		(postfix (subseq-of-length sequence (- (length sequence) 3) 3)))
+	    (push fasta-id (gethash prefix entries-with-prefix))
+	    (push fasta-id (gethash postfix entries-with-postfix))))
+    (with-output-to-file (output)
+     (iter (for (prefix prefix-fasta-ids) in-hashtable entries-with-prefix)
+	   (iter (for prefix-fasta-id in prefix-fasta-ids)
+		 (iter (for postfix-fasta-id in (gethash prefix entries-with-postfix))
+		       (when (not (string= prefix-fasta-id postfix-fasta-id))
+			 (format output "~a ~a~%" postfix-fasta-id prefix-fasta-id))))))))

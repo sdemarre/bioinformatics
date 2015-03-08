@@ -171,3 +171,6 @@ returns a list of positions in the genome where kmer was found."
 
 (defun integer-list (string)
   (mapcar #'parse-integer (split-sequence:split-sequence #\Space string)))
+
+(defun print-integer-list (list &optional (stream t))
+  (format stream "~{~a~^ ~}~%" list))
