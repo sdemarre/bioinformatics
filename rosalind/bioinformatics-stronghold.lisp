@@ -201,3 +201,11 @@
 		 (iter (for postfix-fasta-id in (gethash prefix entries-with-postfix))
 		       (when (not (string= prefix-fasta-id postfix-fasta-id))
 			 (format output "~a ~a~%" postfix-fasta-id prefix-fasta-id))))))))
+
+(define-rosalind-problem :iev "rosalind_iev.txt" expected-offspring
+  "calculating expected offspring"
+  (let ((number-couples (integer-list (first (read-file-lines input-filename))))
+	(probability-for-dominant '(1 1 1 0.75 0.5 0)))
+    (* 2 (iter (for k in number-couples)
+	       (for p in probability-for-dominant)
+	       (summing (* k p))))))
