@@ -71,6 +71,7 @@
 	    'string)))
 
 (define-rosalind-problem :subs "rosalind_subs.txt" rosalind-find-motifs
+  "finding a motif in dna"
   (let* ((lines (read-file-lines input-filename))
 	 (haystack (first lines))
 	 (needle (second lines)))
@@ -143,6 +144,7 @@
 	  (appending (mapcar #'(lambda (r) (cons i r)) (list-permutations (remove i list)))))
     (list nil)))
 (define-rosalind-problem :perm "rosalind_perm.txt" rosalind-permutations
+  "enumerating gene orders"
   (let* ((list-length (parse-integer (first (read-file-lines input-filename))))
 	 (table (iter (for i from 1 to list-length)
 		      (collect i))))
@@ -178,7 +180,8 @@
     (iter (for kmer-count from 0 to (1- (expt (length monomer-vector) k)))
 	  (fill-nth-lex-kmer kmer monomer-vector kmer-count)
 	  (funcall fun kmer))))
-(define-rosalind-problem :lexf "rosalind_lexf.txt" rosalind-enumerate-kmers-lex ()
+(define-rosalind-problem :lexf "rosalind_lexf.txt" rosalind-enumerate-kmers-lex
+  "enumerating k-mers lexicographically"
   (let* ((lines (read-file-lines input-filename))
 	 (monomer-vector (remove #\Space (first lines)))
 	 (k (parse-integer (second lines))))

@@ -12,6 +12,7 @@
 	       (:file "rosalind/rosalind")
 	       (:file "rosalind/python-village")
 	       (:file "rosalind/bioinformatics-stronghold")
+	       (:file "rosalind/algorithmic-heights")
 	       (:file "week-1")))
 
 

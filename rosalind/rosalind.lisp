@@ -20,6 +20,10 @@
 	problem-info
 	(error "You didn't solve this problem yet (~a)" rosalind-id))))
 
+(defun list-solved-rosalind-problems ()
+  (iter (for (id fun) in-hashtable *rosalind-id-info*)
+	(collect (cons id (documentation (rosalind-find-function id) 'function)))))
+
 (defun make-output-filename (input-filename)
   (format nil "~a_output.txt" (subseq input-filename 0 (- (length input-filename) 4))))
 

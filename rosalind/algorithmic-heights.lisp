@@ -12,6 +12,7 @@
 		  (incf swaps-count))))
     swaps-count))
 (define-rosalind-problem :ins "rosalind_ins.txt" insertion-sort-swaps
+  "insertion sort"
   (let* ((data (second (read-file-lines input-filename)))
 	 (unsorted-data (integer-list data)))
     (count-insertion-sort-swaps (coerce unsorted-data 'vector))))
@@ -48,10 +49,10 @@
 (defun make-adjacency-list (lines &optional (graph-type :undirected))
   (let ((adjacency-list (make-hash-table)))
     (iter (for line in (rest lines))
-	  (destructuring-bind-integers (source-vertex target-vertex) line
-	    (push source-vertex (gethash target-vertex adjacency-list))
+	  (destructuring-bind-integers (head-vertex tail-vertex) line
+	    (push tail-vertex (gethash head-vertex adjacency-list))
 	    (unless (eq graph-type :directed)
-	      (push target-vertex (gethash source-vertex adjacency-list)))))
+	      (push head-vertex (gethash tail-vertex adjacency-list)))))
     adjacency-list))
 (defun make-degree-array (adjacency-list number-vertices)
   (let ((degree-array (make-array number-vertices)))
@@ -77,6 +78,30 @@
       (declare (ignorable number-edges))
       (let ((degree-array (make-degree-array adjacency-list number-vertices)))
 	(print-integer-list
-		(iter (for vertex from 1 to number-vertices)
-		      (collect (iter (for neighbour in (gethash vertex adjacency-list))
-				     (summing (elt degree-array (1- neighbour)))))))))))
+	 (iter (for vertex from 1 to number-vertices)
+	       (collect (iter (for neighbour in (gethash vertex adjacency-list))
+			      (summing (elt degree-array (1- neighbour)))))))))))
+
+(define-rosalind-problem :bfs "rosalind_bfs.txt" breadth-first-search
+  "breadth first search"
+  (let* ((lines (read-file-lines input-filename))
+	 (adjacency-list (make-adjacency-list lines :directed))
+	 (reachable-vertices (list 1))
+	 (reached-vertices (make-hash-table)))
+    (iter (while (not (null reachable-vertices)))
+	  (for distance from 0)
+	  (let (new-vertices)
+	    (iter (for vertex in reachable-vertices)
+		  (setf (gethash vertex reached-vertices) distance)
+		  (iter (for neighbour in (gethash vertex adjacency-list))
+			(unless (gethash neighbour reached-vertices)
+			  (pushnew neighbour new-vertices))))	    
+	    (setf reachable-vertices new-vertices)))
+    (destructuring-bind-integers (number-vertices number-edges) (first lines)
+      (declare (ignorable number-edges))
+      (print-integer-list
+       (iter (for vertex from 1 to number-vertices)
+	     (collect (alexandria:if-let ((distance (gethash vertex reached-vertices)))
+			distance
+			-1)))))))
+
