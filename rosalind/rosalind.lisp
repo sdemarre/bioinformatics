@@ -24,8 +24,13 @@
   (iter (for (id fun) in-hashtable *rosalind-id-info*)
 	(collect (cons id (documentation (rosalind-find-function id) 'function)))))
 
+(defun make-input-filename (problem-id)
+  (format nil "rosalind_~a.txt" (string-downcase (symbol-name problem-id))))
 (defun make-output-filename (input-filename)
   (format nil "~a_output.txt" (subseq input-filename 0 (- (length input-filename) 4))))
+
+(defun rosalind-lines (problem-id)
+  (read-file-lines (make-input-filename problem-id)))
 
 (defmacro with-output-to-file ((stream-name) &body body)
   `(with-open-file (,stream-name (make-output-filename input-filename) :direction :output :if-exists :supersede)
