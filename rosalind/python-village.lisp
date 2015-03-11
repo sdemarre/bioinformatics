@@ -1,12 +1,12 @@
 (in-package :bioinformatics)
 
-(define-rosalind-problem :ini3 "rosalind_ini3.txt" multiple-substrings
+(define-rosalind-problem :ini3 multiple-substrings
   "strings and lists"
   (let ((lines (read-file-lines input-filename)))
     (destructuring-bind-integers (start1 end1 start2 end2) (second lines)
       (format nil "~a ~a" (subseq (first lines) start1 (1+ end1)) (subseq (first lines) start2 (1+ end2))))))
 
-(define-rosalind-problem :ini4 "rosalind_ini4.txt" sum-odd-ints
+(define-rosalind-problem :ini4 sum-odd-ints
   "conditions and loops"
   (let ((lines (read-file-lines input-filename)))
     (destructuring-bind-integers (a b) (first lines)
@@ -14,7 +14,7 @@
 	    (when (oddp i)
 	      (summing i))))))
 
-(define-rosalind-problem :ini5 "rosalind_ini5.txt" rosalind-even-lines-from-file
+(define-rosalind-problem :ini5 rosalind-even-lines-from-file
   "working with files"
   (let ((lines (read-file-lines input-filename)))
     (iter (for line in lines)
@@ -22,7 +22,7 @@
 	  (when (evenp line-number)
 	    (format t "~a~%" line)))))
 
-(define-rosalind-problem :ini6  "rosalind_ini6.txt" count-words
+(define-rosalind-problem :ini6  count-words
   "dictionaries"
   (let ((lines (read-file-lines input-filename))
 	(word-counts (make-hash-table :test #'equal)))

@@ -11,7 +11,7 @@
 			 data-k-1 data-k)
 		  (incf swaps-count))))
     swaps-count))
-(define-rosalind-problem :ins "rosalind_ins.txt" insertion-sort-swaps
+(define-rosalind-problem :ins insertion-sort-swaps
   "insertion sort"
   (let* ((data (second (read-file-lines input-filename)))
 	 (unsorted-data (integer-list data)))
@@ -35,7 +35,7 @@
     (when (and (< pos (length sorted-array))
 	       (= (elt sorted-array pos) element))
       pos)))
-(define-rosalind-problem :bins "rosalind_bins.txt" rosalind-binary-search
+(define-rosalind-problem :bins rosalind-binary-search
   "binary search"
   (let* ((lines (read-file-lines input-filename))
 	 (sorted-array (coerce (integer-list (third lines)) 'vector))
@@ -60,7 +60,7 @@
 	  (for vertex-index from 0)
 	  (setf (elt degree-array vertex-index) (length (gethash vertex adjacency-list))))
     degree-array))
-(define-rosalind-problem :deg "rosalind_deg.txt" degree-array
+(define-rosalind-problem :deg degree-array
   "degree array"
   (let* ((lines (read-file-lines input-filename))
 	 (adjacency-list (make-adjacency-list lines)))
@@ -70,7 +70,7 @@
 	      (iter (for degree in-vector (make-degree-array adjacency-list number-vertices))
 		    (collect degree))))))
 
-(define-rosalind-problem :ddeg "rosalind_ddeg.txt" double-degree-array
+(define-rosalind-problem :ddeg double-degree-array
   "double-degree array"
   (let* ((lines (read-file-lines input-filename))
 	 (adjacency-list (make-adjacency-list lines)))
@@ -98,7 +98,7 @@
 	 (collect (alexandria:if-let ((distance (gethash vertex reached-vertices)))
 		    distance
 		    -1)))))
-(define-rosalind-problem :bfs "rosalind_bfs.txt" breadth-first-search
+(define-rosalind-problem :bfs breadth-first-search
   "breadth first search"
   (let* ((lines (read-file-lines input-filename))
 	 (adjacency-list (make-adjacency-list lines :directed)))

@@ -1,6 +1,6 @@
 (in-package :bioinformatics)
 
-(define-rosalind-problem :dna "rosalind_dna.txt" rosalind-dna
+(define-rosalind-problem :dna rosalind-dna
   "counting dna nucleotides"
   (let ((dna (first (read-file-lines input-filename)))
 	(count-hash (make-hash-table)))
@@ -10,12 +10,12 @@
 	    (iter (for letter in-vector "ACGT")
 		  (collect (gethash letter count-hash))))))
 
-(define-rosalind-problem :rna "rosalind_rna.txt" rosalind-rna
+(define-rosalind-problem :rna rosalind-rna
   "transcribing dna into rna"
   (let ((dna (first (read-file-lines input-filename))))
     (cl-ppcre:regex-replace-all "T" dna "U")))
 
-(define-rosalind-problem :revc "rosalind_revc.txt" rosalind-revc
+(define-rosalind-problem :revc rosalind-revc
   "complementing a strand of dna"
   (let ((dna (first (read-file-lines input-filename))))
     (reverse-complement dna)))
@@ -24,7 +24,7 @@
   (cond ((= generations 0) fnm1)
 	((= generations 1) fnm2)
 	(t (ros-fib (1- generations) pairs-per-litter fnm1 (+ fnm1 (* pairs-per-litter fnm2))))))
-(define-rosalind-problem :fib "rosalind_fib.txt" rosalind-fib
+(define-rosalind-problem :fib rosalind-fib
   "rabbits and recurrence relations"
   (destructuring-bind-integers  (generations pairs-per-litter) (first (read-file-lines input-filename))
     (ros-fib generations pairs-per-litter)))
@@ -33,7 +33,7 @@
   (* 1.0 (/ (iter (for letter in-vector dna)
 		  (counting (or (char= letter #\C) (char= letter #\G))))
 	    (length dna))))
-(define-rosalind-problem :gc "rosalind_gc.txt" rosalind-gc
+(define-rosalind-problem :gc rosalind-gc
   "computing gc content"
   (let ((lines (read-fasta-lines input-filename)))
     (iter (for (name dna) in lines)
@@ -43,7 +43,7 @@
   (iter (for letter1 in-vector dna1)
 	(for letter2 in-vector dna2)
 	(counting (not (char= letter1 letter2)))))
-(define-rosalind-problem :hamm "rosalind_hamm.txt" rosalind-hamming
+(define-rosalind-problem :hamm rosalind-hamming
   "counting point mutations"
   (let* ((lines (read-file-lines input-filename))
 	 (dna1 (first lines))
@@ -55,13 +55,13 @@
 	(l heterozygous-count)
 	(m homozygous-recessive-count))
     (/ (+ (* k (1- k)) (* 2 k l) (* 2 k m) (* m l)  (/ (* 3 l (1- l)) 4)) (* (+ k l m) (+ k l m -1)))))
-(define-rosalind-problem :iprb "rosalind_iprb.txt" mendels-first-law
+(define-rosalind-problem :iprb mendels-first-law
   "mendel's first law"
   (let ((lines (read-file-lines input-filename)))
     (destructuring-bind-integers (homozygous-dominant-count heterozygous-count homozygous-recessive-count) (first lines)
       (float (rosalind-mendelian homozygous-dominant-count heterozygous-count homozygous-recessive-count)))))
 
-(define-rosalind-problem :prot "rosalind_prot.txt" rosalind-rna-to-protein
+(define-rosalind-problem :prot rosalind-rna-to-protein
   "translating rna into protein"
   (let ((lines (read-file-lines input-filename)))
     (coerce (mapcar #'(lambda (s) (if (= 1 (length s))
@@ -70,7 +70,7 @@
 		    (butlast (rna-to-protein (first lines))))
 	    'string)))
 
-(define-rosalind-problem :subs "rosalind_subs.txt" rosalind-find-motifs
+(define-rosalind-problem :subs rosalind-find-motifs
   "finding a motif in dna"
   (let* ((lines (read-file-lines input-filename))
 	 (haystack (first lines))
@@ -88,7 +88,7 @@
     (format stream "C: ~{~A~^ ~}~%" (coerce c-prof 'list))
     (format stream "G: ~{~A~^ ~}~%" (coerce g-prof 'list))
     (format stream "T: ~{~A~^ ~}~%" (coerce t-prof 'list))))
-(define-rosalind-problem :cons "rosalind_cons.txt" rosalind-consensus-and-profile-to-file
+(define-rosalind-problem :cons rosalind-consensus-and-profile-to-file
   "consensus and profile"
   (with-output-to-file (output)
     (rosalind-consensus-and-profile-print output input-filename)))
@@ -111,7 +111,7 @@
       (print-generation generations generation-counts))
     (iter (for count in-vector generation-counts)
 	  (sum count))))
-(define-rosalind-problem :fibd "rosalind_fibd.txt" rosalind-mortal-rabits
+(define-rosalind-problem :fibd rosalind-mortal-rabits
   "mortal fibonacci rabbits"
   (destructuring-bind-integers (generations pair-lifetime)
       (first (read-file-lines input-filename))
@@ -128,7 +128,7 @@
 (defun all-have-common-substr (dna-string-1 substr-start substr-length other-strings)
   (iter (for dna-string-2 in other-strings)
 	(always (has-common-substr dna-string-1 substr-start substr-length dna-string-2))))
-(define-rosalind-problem :lcsm "rosalind_lcsm.txt" rosalind-longest-common-substr
+(define-rosalind-problem :lcsm rosalind-longest-common-substr
   "finding a shared motif"
     (let* ((dna-strings (mapcar #'second (read-fasta-lines input-filename)))
 	 (sorted-dna-strings (sort dna-strings #'< :key #'length))
@@ -143,7 +143,7 @@
     (iter (for i in list)
 	  (appending (mapcar #'(lambda (r) (cons i r)) (list-permutations (remove i list)))))
     (list nil)))
-(define-rosalind-problem :perm "rosalind_perm.txt" rosalind-permutations
+(define-rosalind-problem :perm rosalind-permutations
   "enumerating gene orders"
   (let* ((list-length (parse-integer (first (read-file-lines input-filename))))
 	 (table (iter (for i from 1 to list-length)
@@ -163,7 +163,7 @@
 	(iter (for position from 0 to (- (length dna-string) substring-length))
 	      (when (is-reverse-palindrome-subseq dna-string position substring-length)
 		(in outer (collect (list position substring-length)))))))
-(define-rosalind-problem :revp "rosalind_revp.txt" restriction-sites
+(define-rosalind-problem :revp restriction-sites
   "locating restriction sites"
   (let ((dna-string (second (first (read-fasta-lines input-filename)))))
     (with-output-to-file (output)
@@ -180,7 +180,7 @@
     (iter (for kmer-count from 0 to (1- (expt (length monomer-vector) k)))
 	  (fill-nth-lex-kmer kmer monomer-vector kmer-count)
 	  (funcall fun kmer))))
-(define-rosalind-problem :lexf "rosalind_lexf.txt" rosalind-enumerate-kmers-lex
+(define-rosalind-problem :lexf rosalind-enumerate-kmers-lex
   "enumerating k-mers lexicographically"
   (let* ((lines (read-file-lines input-filename))
 	 (monomer-vector (remove #\Space (first lines)))
@@ -188,7 +188,7 @@
     (with-output-to-file (s)
       (do-for-all-kmers monomer-vector k #'(lambda (v) (format s "~a~%" (coerce v 'string)))))))
 
-(define-rosalind-problem :grph "rosalind_grph.txt" overlap-graphs
+(define-rosalind-problem :grph overlap-graphs
   "overlap graphs"
   (let ((fasta-data (read-fasta-lines input-filename))
 	(entries-with-prefix (make-hash-table :test #'equal))

@@ -2,8 +2,8 @@
 
 (defparameter *rosalind-id-info* (make-hash-table))
 
-(defmacro define-rosalind-problem (rosalind-id input-filename function-name &body body)
-  `(let ((input-filename ,input-filename))
+(defmacro define-rosalind-problem (rosalind-id function-name &body body)
+  `(let ((input-filename (make-input-filename rosalind-id)))
      (setf (gethash ,rosalind-id *rosalind-id-info*) ',function-name)
      (defun ,function-name ()
        ,@body)))
