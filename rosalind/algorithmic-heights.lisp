@@ -14,7 +14,7 @@
 (define-rosalind-problem :ins insertion-sort-swaps
   "insertion sort"
   (let* ((data (second (read-file-lines input-filename)))
-	 (unsorted-data (integer-list data)))
+	 (unsorted-data (parse-integer-list data)))
     (count-insertion-sort-swaps (coerce unsorted-data 'vector))))
 
 (defun binary-search (sequence compare)
@@ -38,8 +38,8 @@
 (define-rosalind-problem :bins rosalind-binary-search
   "binary search"
   (let* ((lines (read-file-lines input-filename))
-	 (sorted-array (coerce (integer-list (third lines)) 'vector))
-	 (elements-to-find (integer-list (fourth lines))))
+	 (sorted-array (coerce (parse-integer-list (third lines)) 'vector))
+	 (elements-to-find (parse-integer-list (fourth lines))))
     (with-output-to-file (output)
       (print-integer-list
 	      (iter (for element in elements-to-find)
@@ -132,3 +132,18 @@
 	(iter (for neighbour in neighbours)
 	      (format stream "  n~a -> n~a;~%" vertex neighbour)))
   (format stream "}~%"))
+
+(defun majority-element (int-list)
+  (let* ((counts (make-hash-table))
+	 (list-length 0)
+	 (int-with-max-count
+	  (iter (for int in int-list)
+		(incf list-length)
+		(finding int maximizing (incf (gethash int counts 0))))))
+    (if (> (gethash int-with-max-count counts) (/ list-length 2))
+	int-with-max-count
+	-1)))
+(define-rosalind-problem :maj ros-majority-element
+  "majority element"
+  (iter (for line in (rest (read-file-lines input-filename)))
+	(collect (majority-element (parse-integer-list line)))))
