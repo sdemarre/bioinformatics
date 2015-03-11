@@ -1,4 +1,4 @@
-(in-package :rosalind)
+(in-package :bioinformatics)
 
 (defclass rosalind-set ()
   ((max-element :accessor max-element :initarg :max-element)

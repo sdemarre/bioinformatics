@@ -22,7 +22,7 @@
 	  (when (evenp line-number)
 	    (format t "~a~%" line)))))
 
-(define-rosalind-problem :ini6  count-words
+(define-rosalind-problem :ini6 count-words
   "dictionaries"
   (let ((lines (read-file-lines input-filename))
 	(word-counts (make-hash-table :test #'equal)))

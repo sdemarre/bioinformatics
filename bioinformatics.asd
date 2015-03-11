@@ -10,7 +10,7 @@
 	       (:file "utils")
                (:file "bioinformatics")
 	       (:file "rosalind/rosalind")
-	       (:file "rosalind/set.lisp")
+	       (:file "rosalind/set")
 	       (:file "rosalind/python-village")
 	       (:file "rosalind/bioinformatics-stronghold")
 	       (:file "rosalind/algorithmic-heights")

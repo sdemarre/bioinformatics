@@ -205,7 +205,7 @@
 		       (when (not (string= prefix-fasta-id postfix-fasta-id))
 			 (format output "~a ~a~%" postfix-fasta-id prefix-fasta-id))))))))
 
-(define-rosalind-problem :iev "rosalind_iev.txt" expected-offspring
+(define-rosalind-problem :iev expected-offspring
   "calculating expected offspring"
   (let ((number-couples (integer-list (first (read-file-lines input-filename))))
 	(probability-for-dominant '(1 1 1 0.75 0.5 0)))
