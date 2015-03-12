@@ -181,3 +181,9 @@ returns a list of positions in the genome where kmer was found."
 
 (defun combinations (n p)
   (/ (fact n) (fact p) (fact (- n p))))
+
+(defun probability-for-events (event-type-profile event-type event-count number-experiments)
+  (let ((event-probability (gethash event-type event-type-profile 0)))
+    (* (combinations number-experiments event-count)
+       (expt event-probability event-count)
+       (expt (- 1 event-probability) (- number-experiments event-count)))))

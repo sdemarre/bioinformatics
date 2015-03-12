@@ -212,3 +212,10 @@
     (* 2 (iter (for k in number-couples)
 	       (for p in probability-for-dominant)
 	       (summing (* k p))))))
+
+(define-rosalind-problem :lia independent-alleles
+  "independent-alleles"
+  (destructuring-bind-integers (k n) (first (read-file-lines input-filename))
+    (let ((profile (child-genotype-probabilities "AaBb" "AaBb")))
+      (float (iter (for i from n to (expt 2 k))
+		   (summing (probability-for-events profile "AaBb" i (expt 2 k))))))))

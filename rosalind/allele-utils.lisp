@@ -54,7 +54,7 @@ e.g.\"AaBb\" \"aaBB\" ((0 1) (1 0)) -> AabB"
 		  (push (child-genotype parent1-genotype parent2-genotype gene-selectors) child-genotypes))))
     child-genotypes))
 
-(defun child-genotype-probabilities (parent1-genotype parent2-genotype)
+(defun child-genotype-profile (parent1-genotype parent2-genotype)
   (let ((genotype-counts (make-hash-table :test #'equal))
 	(total 0))
     (iter (for genotype in (possible-child-genotypes parent1-genotype parent2-genotype))
@@ -68,7 +68,7 @@ e.g.\"AaBb\" \"aaBB\" ((0 1) (1 0)) -> AabB"
   (let ((next-generation-profile (make-hash-table :test #'equal)))
     (iter (for (genotype probability) in-hashtable current-generation-profile)
 	  (format t "processing \"~a\"[~a]~%" genotype probability)
-	  (iter (for (child-genotype new-prob) in-hashtable (child-genotype-probabilities genotype mate-genotype))
+	  (iter (for (child-genotype new-prob) in-hashtable (child-genotype-profile genotype mate-genotype))
 		(incf (gethash child-genotype next-generation-profile 0) (* probability new-prob)))
 	  (format t "~a~%" (alexandria:hash-table-alist next-generation-profile)))
     next-generation-profile))
