@@ -174,3 +174,10 @@ returns a list of positions in the genome where kmer was found."
 
 (defun print-integer-list (list &optional (stream t))
   (format stream "~{~a~^ ~}~%" list))
+
+(defun fact (n)
+  (iter (for i from 1 to n)
+	(multiply i)))
+
+(defun combinations (n p)
+  (/ (fact n) (fact p) (fact (- n p))))

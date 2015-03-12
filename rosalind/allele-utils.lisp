@@ -62,3 +62,13 @@ e.g.\"AaBb\" \"aaBB\" ((0 1) (1 0)) -> AabB"
 	  (incf total))
     (alexandria:maphash-keys #'(lambda (k) (setf (gethash k genotype-counts) (/ (gethash k genotype-counts) total))) genotype-counts)
     genotype-counts))
+
+(defun compute-next-generation-profile (current-generation-profile mate-genotype)
+  "current-generation-profile is a hash-table with probability for every genotype"
+  (let ((next-generation-profile (make-hash-table :test #'equal)))
+    (iter (for (genotype probability) in-hashtable current-generation-profile)
+	  (format t "processing \"~a\"[~a]~%" genotype probability)
+	  (iter (for (child-genotype new-prob) in-hashtable (child-genotype-probabilities genotype mate-genotype))
+		(incf (gethash child-genotype next-generation-profile 0) (* probability new-prob)))
+	  (format t "~a~%" (alexandria:hash-table-alist next-generation-profile)))
+    next-generation-profile))
