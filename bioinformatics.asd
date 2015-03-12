@@ -11,6 +11,7 @@
                (:file "bioinformatics")
 	       (:file "rosalind/rosalind")
 	       (:file "rosalind/set")
+	       (:file "rosalind/allele-utils")
 	       (:file "rosalind/python-village")
 	       (:file "rosalind/bioinformatics-stronghold")
 	       (:file "rosalind/algorithmic-heights")
