@@ -219,3 +219,7 @@
     (let ((profile (child-genotype-probabilities "AaBb" "AaBb")))
       (float (iter (for i from n to (expt 2 k))
 		   (summing (probability-for-events profile "AaBb" i (expt 2 k))))))))
+
+(define-rosalind-problem :prtm ros-protein-mass
+  "calculating protein mass"
+  (protein-mass (first (read-file-lines input-filename))))
