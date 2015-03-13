@@ -147,3 +147,36 @@
   "majority element"
   (iter (for line in (rest (read-file-lines input-filename)))
 	(collect (majority-element (parse-integer-list line)))))
+
+(define-rosalind-problem :mer ros-merge-sorted
+  "merge sorted arrays"
+  (let* ((lines (read-file-lines input-filename))
+	 (list-1 (parse-integer-list (second lines)))
+	 (list-2 (parse-integer-list (fourth lines))))
+    (with-output-to-file (stream)
+      (format stream "~{~a~^ ~}~%"
+	      (iter (until (and (null list-1) (null list-2)))
+		    (cond ((null list-1) (collect (pop list-2)))
+			  ((null list-2) (collect (pop list-1)))
+			  ((< (car list-1) (car list-2)) (collect (pop list-1)))
+			  (t (collect (pop list-2)))))))))
+
+(define-rosalind-problem :2sum ros-2sum
+  "2sum"
+  (let* ((lines (read-file-lines input-filename)))
+    (with-output-to-file (stream)
+     (iter (for line in (rest lines))
+	   (for line-num from 1)
+	   (let ((labeled-list (iter (for i from 1)
+				     (for e in (parse-integer-list line))
+				     (collect (cons e i)))))
+	     (setf labeled-list (sort  labeled-list #'< :key #'(lambda (e) (abs (car e)))))
+	     (let (found)
+	       (iter (for e on labeled-list)
+		     (while (not found))
+		     (when (and (rest e)
+				(= (- (car (first e))) (car (second e))))
+		       (format stream "~a ~a~%" (cdr (first e)) (cdr (second e)))
+		       (setf found t)))
+	       (unless found
+		 (format stream "-1~%"))))))))
