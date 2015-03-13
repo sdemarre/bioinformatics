@@ -223,3 +223,19 @@
 (define-rosalind-problem :prtm ros-protein-mass
   "calculating protein mass"
   (protein-mass (first (read-file-lines input-filename))))
+
+(define-rosalind-problem :mrna ros-infer-rna-from-protein
+  "infering mRNA from protein"
+  (let ((protein-string (first (read-file-lines input-filename))))
+    ;; account for 3 possible stop codons
+    (mod (* 3 (count-possible-rna-sources-for-protein protein-string)) (expt 10 6))))
+
+(define-rosalind-problem :splc ros-splice-rna
+  "rna splicing"
+  (let* ((fasta-data (read-fasta-lines input-filename))
+	 (dna (second (first fasta-data)))
+	 (introns (iter (for (fasta-id string) in (rest fasta-data))
+			(collect string))))
+    (iter (for intron in introns)
+	  (setf dna (cl-ppcre:regex-replace-all intron dna "")))
+    (format nil "~{~a~}" (butlast (dna-to-protein dna)))))

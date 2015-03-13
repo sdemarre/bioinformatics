@@ -83,11 +83,19 @@ returns a list of positions in the genome where kmer was found."
     ("Stop codon" "Stop" ("TAA" "TAG" "TGA"))))
 
 
-(defparameter *dna-codon-amino-hash* (progn (let ((result (make-hash-table :test #'equal)))
-					  (iter (for (name code codons) in *codon-amino-data*)
-						(iter (for codon in codons)
-						      (setf (gethash codon result) (list name code))))
-					  result)))
+(defparameter *dna-codon-amino-hash*
+  (let ((result (make-hash-table :test #'equal)))
+    (iter (for (name code codons) in *codon-amino-data*)
+	  (iter (for codon in codons)
+		(setf (gethash codon result) (list name code))))
+    result))
+
+(defparameter *protein-to-codons-hash*
+  (let ((result (make-hash-table :test #'equal)))
+    (iter (for (name code codons) in *codon-amino-data*)
+	  (when (not (string= code "Stop"))
+	    (setf (gethash (elt code 0) result) codons)))
+    result))
 (defun rna-to-dna (rna)
   (cl-ppcre:regex-replace-all "U" rna "T"))
 (defun dna-to-rna (dna)
@@ -129,6 +137,7 @@ returns a list of positions in the genome where kmer was found."
     (iter (for (key value) in-hashtable dna-strings)
 	  (collect (list key (combine-strings (reverse value)))))))
 (defun read-fasta-lines (filename)
+  "returns a list of (fasta-id string), as found in filename"
   (let ((lines (read-file-lines filename)))
     (fasta-combine-lines lines)))
 
@@ -219,3 +228,7 @@ returns a list of positions in the genome where kmer was found."
 (defun protein-mass (protein)
   (iter (for aa in-vector protein)
 	(summing (amino-acid-mass aa))))
+
+(defun count-possible-rna-sources-for-protein (protein-string)
+  (iter (for protein in-vector protein-string)
+	  (multiplying (length (gethash protein *protein-to-codons-hash*)))))
