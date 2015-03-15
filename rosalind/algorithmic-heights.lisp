@@ -183,21 +183,54 @@
 
 
 (defun merge-sort (data &optional (start 0) (end (1- (length data))))
-  (unless (= start end)
-    (let ((middle (floor (+ start end) 2)))
-      (merge-sort data start middle)
-      (merge-sort data (1+ middle) end)
-      (let ((p1 start)
-	    (p2(1+ middle))
-	    (pos start))
-	(iter (while (<= pos end))
-	      (if (< (elt data p1) (elt data p2))
-		  (progn
-		    (setf (elt data pos) (elt data p1)))
-		  (incf p2)))))))
+  (macrolet ((swap (a b) `(psetf ,a ,b ,b ,a)))
+   (unless (= start end)
+     (let ((middle (floor (+ start end) 2)))
+       (merge-sort data start middle)
+       (merge-sort data (1+ middle) end)
+       (let ((p1 start)
+	     (p2 (1+ middle)))
+	 (iter (for pos from start to end)
+	       (until (or (> p1 middle) (> p2 end)))
+	       (if (< (elt data p1) (elt data p2))
+		   (progn
+		     (swap (elt data pos) (elt data p1))
+		     (incf p1))
+		   (progn
+		     (swap (elt data pos) (elt data p2))
+		     (incf p2)))))))))
 (define-rosalind-problem :ms ros-merge-sort
   "merge sort"
   (let ((data (coerce (parse-integer-list (first (read-file-lines input-filename))) 'vector)))
     (with-output-to-file (stream)
       (merge-sort data)
       (format stream "~{~a~^ ~}~%" (coerce data 'list)))))
+
+
+(defun transcode-open-frames (dna-string)
+  (let ((start-positions (cl-ppcre:all-matches "ATG" dna-string))
+	(dna-string-length (length dna-string))
+	all-results)
+    (iter (for start-pos on start-positions by #'cddr)
+	  (let (stop
+		result)
+	    (iter (for codon-pos from (car start-pos) by 3)
+		  (until (or  stop (> codon-pos (- dna-string-length 3))))
+		  (let ((codon (subseq-of-length dna-string codon-pos 3)))
+		    (if (is-dna-stop-codon-p codon)
+			(progn
+			  (setf stop t)
+			  (unless (null result)
+			    (push (coerce (nreverse result) 'string) all-results)))
+			(push (elt (dna-codon-to-amino-acid codon) 0) result))))))
+    all-results))
+(define-rosalind-problem :orf ros-open-reading-frames
+  "open reading frames"
+  (with-single-fasta-line (dna-string)
+    (let ((proteins (make-hash-table :test #'equal)))
+      (iter (for protein in (transcode-open-frames dna-string))
+	    (setf (gethash protein proteins) 1))
+      (iter (for protein in (transcode-open-frames (reverse-complement dna-string)))
+	    (setf (gethash protein proteins) 1))
+      (with-output-to-file (stream)
+	(format stream "~{~a~%~}" (alexandria:hash-table-keys proteins))))))

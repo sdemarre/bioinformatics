@@ -25,7 +25,7 @@
 	(collect (cons id (documentation (rosalind-find-function id) 'function)))))
 
 (defun make-input-filename (problem-id)
-  (format nil "rosalind_~a.txt" (string-downcase (symbol-name problem-id))))
+  (format nil "rosalind/rosalind_~a.txt" (string-downcase (symbol-name problem-id))))
 (defun make-output-filename (input-filename)
   (format nil "~a_output.txt" (subseq input-filename 0 (- (length input-filename) 4))))
 
@@ -38,3 +38,20 @@
      (make-output-filename input-filename)))
 
 
+(defmacro with-input-lines ((lines-var-name) &body body)
+  `(let ((,lines-var-name (read-file-lines input-filename)))
+     ,@body))
+(defmacro with-single-input-line ((line-var-name) &body body)
+  (let ((gslines (gensym)))
+   `(with-input-lines (,gslines)
+      (let ((,line-var-name (first ,gslines)))
+	,@body))))
+
+(defmacro with-fasta-input-lines ((fasta-lines-var-name) &body body)
+  `(let ((,fasta-lines-var-name (read-fasta-lines input-filename)))
+     ,@body))
+(defmacro with-single-fasta-line ((fasta-line-var-name) &body body)
+  (let ((flines (gensym)))
+    `(with-fasta-input-lines (,flines)
+       (let ((,fasta-line-var-name (second (first ,flines))))
+	 ,@body))))

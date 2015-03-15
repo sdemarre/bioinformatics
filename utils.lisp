@@ -109,11 +109,14 @@ returns a list of positions in the genome where kmer was found."
 (defun dna-codon-to-amino-acid (codon)
   (second (gethash codon *dna-codon-amino-hash*)))
 
+(defun is-dna-stop-codon-p (codon)
+  (string= "Stop" (dna-codon-to-amino-acid codon)))
+
 (defun rna-codon-to-amino-acid (codon)
   (second (gethash codon *rna-codon-amino-hash*)))
 
-(defun do-on-codons (input fun)
-  (iter (for position from 0 by 3)
+(defun do-on-codons (input fun &optional (start 0))
+  (iter (for position from start by 3)
 	(while (< (+ position 2) (length input)))
 	(collect (funcall fun (subseq-of-length input position 3)))))
 (defun dna-to-protein (dna)
@@ -225,10 +228,52 @@ returns a list of positions in the genome where kmer was found."
 (defun amino-acid-mass (aa)
   (gethash aa *monoisotopic-protein-mass* 0))
 
-(defun protein-mass (protein)
-  (iter (for aa in-vector protein)
+(defun protein-mass (protein-string)
+  "input: string of aa, output: double float"
+  (iter (for aa in-vector protein-string)
 	(summing (amino-acid-mass aa))))
 
 (defun count-possible-rna-sources-for-protein (protein-string)
   (iter (for protein in-vector protein-string)
 	  (multiplying (length (gethash protein *protein-to-codons-hash*)))))
+
+(defun get-uniprot-fasta (uniprot-id)
+  "gets the fasta file that describes this protein from www.uniprot.org"
+  (multiple-value-bind (fasta-string http-status rest)
+      (drakma:http-request (format nil "http://www.uniprot.org/uniprot/~a.fasta" uniprot-id))
+    (declare (ignorable rest))
+    (if (= 200 http-status)
+	(fasta-combine-lines (split-sequence:split-sequence #\Newline fasta-string))
+	(error "http get failed, ~a" http-status))))
+(defun get-uniprot-fasta-cached (uniprot-id)
+  "gets the fasta file that describes this protein from local cache or from www.uniprot.org"  
+  (let ((prot-filename (format nil "uniprot/~a" uniprot-id)))
+    (if (cl-fad:file-exists-p prot-filename)
+	(read-fasta-lines prot-filename)
+	(progn
+	  (with-open-file (fasta-output prot-filename :direction :output :if-exists :supersede)
+	    (let ((fasta-data  (get-uniprot-fasta uniprot-id)))
+	      (format fasta-output "~{~A~%~}" fasta-data)
+	      fasta-data))))))
+
+(defun protein-motif-to-regexp (protein-motif)
+  (cl-ppcre:regex-replace-all "}" (cl-ppcre:regex-replace-all "{" protein-motif "[^") "]"))
+
+(defun protein-motif-positions-wrong (protein-motif protein)
+  ;; this would be ok if we didn't have to find overlapping motifs...
+  (let* ((motif-rx (protein-motif-to-regexp protein-motif))
+	 (matches (cl-ppcre:all-matches motif-rx protein)))
+    (iter (for position on matches by #'cddr)
+	  (collect (1+ (car position))))))
+
+(defun protein-n-glycosilation-positions (protein)
+  (iter (for position from 0 to (- (length protein) 4))
+	(symbol-macrolet ((aa0 (elt protein position))
+			  (aa1 (elt protein (1+ position)))
+			  (aa2 (elt protein (+ position 2)))
+			  (aa3 (elt protein (+ position 3))))
+	 (when (and (char= aa0 #\N)
+		    (not (char= aa1 #\P))
+		    (or (char= aa2 #\S) (char= aa2 #\T))
+		    (not (char= aa3 #\P)))
+	   (collect (1+ position))))))

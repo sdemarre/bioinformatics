@@ -1,11 +1,11 @@
 ;;;; bioinformatics.asd
 
 (asdf:defsystem #:bioinformatics
-  :description "Describe bioinformatics here"
-  :author "Your Name <your.name@example.com>"
+  :description "stuff developed while learning bioinformatics"
+  :author "Serge De Marre <sdemarre@gmail.com>"
   :license "Specify license here"
   :serial t
-  :depends-on (:iterate :alexandria :cl-ppcre :split-sequence)
+  :depends-on (:iterate :alexandria :cl-ppcre :split-sequence :drakma :cl-fad)
   :components ((:file "package")
 	       (:file "utils")
                (:file "bioinformatics")
