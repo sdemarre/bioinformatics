@@ -1,6 +1,6 @@
 (in-package :bioinformatics)
 
-(defun most-frequent-kmer (genome kmer-length)
+(defun most-frequent-kmers (genome kmer-length)
   (let* ((kmer-freq-hash (make-hash-table :test #'equal))
 	 (max-kmer-freq 
 	  (iter (for position from 0 to (- (length genome) kmer-length))
@@ -9,8 +9,7 @@
     (values
      (iter (for (kmer freq) in-hashtable kmer-freq-hash)
 	   (when (= freq max-kmer-freq)
-	     (collect kmer)))
-     max-kmer-freq)))
+	     (collect kmer))))))
 
 (defun count-kmer (genome kmer)
   (iter (for position from 0 to (- (length genome) (length kmer)))

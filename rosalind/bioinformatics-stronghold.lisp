@@ -258,3 +258,9 @@
 	      (alexandria:when-let ((motif-positions (protein-n-glycosilation-positions protein)))
 		(format stream "~a~%" protein-id)
 		(print-integer-list motif-positions stream)))))))
+
+(define-rosalind-problem :pper ros-partial-permutations
+  "partial permutations"
+  (with-single-input-line (problem-data)
+    (destructuring-bind-integers (n p) problem-data
+      (mod (permutations n p) 1000000))))

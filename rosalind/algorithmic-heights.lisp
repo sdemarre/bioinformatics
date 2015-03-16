@@ -183,22 +183,7 @@
 
 
 (defun merge-sort (data &optional (start 0) (end (1- (length data))))
-  (macrolet ((swap (a b) `(psetf ,a ,b ,b ,a)))
-   (unless (= start end)
-     (let ((middle (floor (+ start end) 2)))
-       (merge-sort data start middle)
-       (merge-sort data (1+ middle) end)
-       (let ((p1 start)
-	     (p2 (1+ middle)))
-	 (iter (for pos from start to end)
-	       (until (or (> p1 middle) (> p2 end)))
-	       (if (< (elt data p1) (elt data p2))
-		   (progn
-		     (swap (elt data pos) (elt data p1))
-		     (incf p1))
-		   (progn
-		     (swap (elt data pos) (elt data p2))
-		     (incf p2)))))))))
+  )
 (define-rosalind-problem :ms ros-merge-sort
   "merge sort"
   (let ((data (coerce (parse-integer-list (first (read-file-lines input-filename))) 'vector)))
@@ -234,3 +219,11 @@
 	    (setf (gethash protein proteins) 1))
       (with-output-to-file (stream)
 	(format stream "~{~a~%~}" (alexandria:hash-table-keys proteins))))))
+
+(define-rosalind-problem :lgis ros-longest-increasing-subseq
+  "longest increasing subsequence"
+  (with-input-lines lines
+    (let ((permutation (coerce (parse-integer-list (second lines)) 'vector)))
+      (iter (for start-pos from 0 to (1- (length permutation)))
+	    ())
+      )))
