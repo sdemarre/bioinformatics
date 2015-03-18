@@ -7,8 +7,11 @@
 (defmethod add-element ((this rosalind-set) el)
   (setf (gethash el (elements this)) 1))
 
+(defmethod empty-set-p ((this rosalind-set))
+  (zerop (hash-table-count (elements this))))
+
 (defmethod remove-element ((this rosalind-set) el)
-  (remhash el this))
+  (remhash el (elements this)))
 
 (defun do-for-set-elements (set fun)
   (iter (for (key value) in-hashtable (elements set))
@@ -16,6 +19,9 @@
 
 (defun has-element-p (set el)
   (gethash el (elements set)))
+
+(defun set-size (set)
+  (hash-table-count (elements set)))
 
 (defmacro with-new-set (set-name &body body)
   `(let ((,set-name (make-instance 'rosalind-set)))
@@ -58,3 +64,12 @@
   (let (elements)
     (do-for-set-elements rosalind-set #'(lambda (el) (push el elements)))
     (format stream "{~{~a~^, ~}}" (nreverse elements))))
+
+(defmethod print-object ((this rosalind-set) stream)
+  (print-unreadable-object (this stream :type 'rosalind-set)
+    (print-set this stream)))
+
+(defmethod get-a-set-element ((this rosalind-set))
+  (iter (for (key value) in-hashtable (elements this))
+	(declare (ignorable value))
+	(return key)))

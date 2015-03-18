@@ -264,3 +264,18 @@
   (with-single-input-line (problem-data)
     (destructuring-bind-integers (n p) problem-data
       (mod (permutations n p) 1000000))))
+
+(defun string-with-matching-subseq (dna-string start end dna-string-list)
+  (iter (for other-dna-string in dna-string-list)
+	(alexandria:when-let (pos (position-of-substring dna-string start end other-dna-string))
+	  (return (cons other-dna-string pos)))))
+(define-rosalind-problem :long ros-assemble-genome
+  "genome assembly as shortest superstring"
+  (with-fasta-input-lines (fasta-data)
+    (iter (for dna-string on (mapcar #'second fasta-data))
+	  (let ((prefix-start 0)
+		(prefix-end (floor (length (car dna-string)) 2)))
+	    (alexandria:if-let
+		((match-data (string-with-matching-subseq (car dna-string) prefix-start prefix-end (cdr dna-string))))
+	      )))
+))

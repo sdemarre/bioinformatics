@@ -46,9 +46,10 @@
 		    (collect (let ((pos (position-binary-search element sorted-array #'<)))
 		      	       (if pos (1+ pos) -1))))))))
 
-(defun make-adjacency-list (lines &optional (graph-type :undirected))
+(defun make-adjacency-list (graph-lines &optional (graph-type :undirected))
+  "result is a hastable with nodes as keys and list of reachable nodes as value"
   (let ((adjacency-list (make-hash-table)))
-    (iter (for line in (rest lines))
+    (iter (for line in (rest graph-lines))
 	  (destructuring-bind-integers (head-vertex tail-vertex) line
 	    (push tail-vertex (gethash head-vertex adjacency-list))
 	    (unless (eq graph-type :directed)
@@ -222,8 +223,38 @@
 
 (define-rosalind-problem :lgis ros-longest-increasing-subseq
   "longest increasing subsequence"
-  (with-input-lines lines
+  (with-input-lines (lines)
     (let ((permutation (coerce (parse-integer-list (second lines)) 'vector)))
-      (iter (for start-pos from 0 to (1- (length permutation)))
-	    ())
-      )))
+      (iter (for start-pos from 0 to (1- (length permutation)))))))
+
+(defun reachable-nodes-from (node adjacency-list)
+  (let ((reachable-nodes (make-instance 'rosalind-set))
+	new-nodes-reachable)
+    (add-element reachable-nodes node)
+    (iter (setf new-nodes-reachable nil)
+	  (do-for-set-elements reachable-nodes
+	    #'(lambda (node)
+		(iter (for neighbour in (gethash node adjacency-list))
+		      (unless (has-element-p reachable-nodes neighbour)
+			(setf new-nodes-reachable t)
+			(add-element reachable-nodes neighbour)))))
+	  (until (not new-nodes-reachable)))
+    reachable-nodes))
+(defun count-connected-components (number-nodes adjacency-list)
+  (let ((unprocessed-nodes (make-instance 'rosalind-set))
+	(connected-components 0))
+    (iter (for node from 1 to number-nodes)
+	  (add-element unprocessed-nodes node))
+    (iter (while (not (empty-set-p unprocessed-nodes)))
+	  (let ((node (get-a-set-element unprocessed-nodes)))
+	    (do-for-set-elements (reachable-nodes-from node adjacency-list)
+	      #'(lambda (reached-node) (remove-element unprocessed-nodes reached-node)))
+	    (incf connected-components)))
+    connected-components))
+(define-rosalind-problem :cc ros-connected-components
+  "connected components"
+  (with-input-lines (lines)
+    (let ((adjacency-list (make-adjacency-list lines)))
+      (destructuring-bind-integers (nodes edges) (first lines)
+	(declare (ignorable edges))
+       (count-connected-components nodes adjacency-list)))))

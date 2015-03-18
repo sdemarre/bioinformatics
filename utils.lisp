@@ -197,11 +197,14 @@ returns a list of positions in the genome where kmer was found."
 (defun permutations (n p)
   (/ (fact n) (fact (- n p))))
 
-(defun probability-for-events (event-type-profile event-type event-count number-experiments)
-  (let ((event-probability (gethash event-type event-type-profile 0)))
-    (* (combinations number-experiments event-count)
-       (expt event-probability event-count)
-       (expt (- 1 event-probability) (- number-experiments event-count)))))
+(defun probability-for-events (event-type-profile event-type event-count number-experiments &optional (max-event-count event-count))
+  (if (> event-count number-experiments)
+      0
+      (let ((event-probability (gethash event-type event-type-profile 0)))
+	(iter (for current-event-count from event-count to max-event-count)
+	      (summing (* (combinations number-experiments current-event-count)
+			  (expt event-probability current-event-count)
+			  (expt (- 1 event-probability) (- number-experiments current-event-count))))))))
 
 (defparameter *monoisotopic-protein-mass*
   (let ((hash (make-hash-table :test #'equal)))
@@ -280,3 +283,16 @@ returns a list of positions in the genome where kmer was found."
 		    (or (char= aa2 #\S) (char= aa2 #\T))
 		    (not (char= aa3 #\P)))
 	   (collect (1+ position))))))
+
+
+(defun position-of-substring (string1 start end string2)
+  "find position of (subseq string1 start end) in string2"
+  (let ((l2 (length string2))
+	(l1 (length string1)))
+    (flet ((substring-at-position-p (idx)
+	     (iter (for idx1 from start to end)
+		   (for idx2 from idx)
+		   (always (char= (elt string1 idx1) (elt string2 idx2))))))
+      (iter (for idx2 from 0 to (- l2 l1))
+	    (when (substring-at-position-p idx2)
+	      (return idx2))))))
