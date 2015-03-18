@@ -257,4 +257,9 @@
     (let ((adjacency-list (make-adjacency-list lines)))
       (destructuring-bind-integers (nodes edges) (first lines)
 	(declare (ignorable edges))
-       (count-connected-components nodes adjacency-list)))))
+	(count-connected-components nodes adjacency-list)))))
+
+(define-rosalind-problem :pmch ros-perfect-matchings
+  "Perfect matchings and RNA secondary structures"
+  (with-single-fasta-line (rna)
+    (* (fact (count #\A rna)) (fact (count #\G rna)))))
