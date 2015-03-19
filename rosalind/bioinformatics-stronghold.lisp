@@ -277,5 +277,28 @@
 		(prefix-end (floor (length (car dna-string)) 2)))
 	    (alexandria:if-let
 		((match-data (string-with-matching-subseq (car dna-string) prefix-start prefix-end (cdr dna-string))))
-	      )))
-))
+	      )))))
+
+(defun apply-signs (list p)
+  "uses the bits of p to decide when to change the sign of elements in list"
+  (iter (for i in list)
+	(if (zerop (mod p 2))
+	    (collect i)
+	    (collect (- i)))
+	(setf p (floor p 2))))
+(defun list-signed-permutations (list)
+  (let ((permutations (list-permutations list))
+	(l (length list)))
+    (iter outer (for permutation in permutations)
+	  (iter (for p from 0 to (1- (expt 2 l)))
+		(in outer (collect (apply-signs permutation p)))))))
+(define-rosalind-problem :sign ros-gene-oriented-orderings
+  "enumerating oriented gene orderings"
+  (with-single-input-line (line)
+    (let* ((n (parse-integer line))
+	   (signed-permutations (list-signed-permutations (iter (for i from 1 to n) (collect i)))))
+      (with-output-to-file (stream)
+	(format stream "~a~%" (length signed-permutations))
+	(iter (for perm in signed-permutations)
+	      (format stream "~{~a~^ ~}~%" perm))))))
+
