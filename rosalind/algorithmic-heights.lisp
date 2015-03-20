@@ -46,30 +46,32 @@
 		    (collect (let ((pos (position-binary-search element sorted-array #'<)))
 		      	       (if pos (1+ pos) -1))))))))
 
-(defun make-adjacency-list (graph-lines &optional (graph-type :undirected))
-  "result is a hastable with nodes as keys and list of reachable nodes as value"
-  (let ((adjacency-list (make-hash-table)))
-    (iter (for line in (rest graph-lines))
-	  (destructuring-bind-integers (head-vertex tail-vertex) line
-	    (push tail-vertex (gethash head-vertex adjacency-list))
-	    (unless (eq graph-type :directed)
-	      (push head-vertex (gethash tail-vertex adjacency-list)))))
-    adjacency-list))
-(defun make-degree-array (adjacency-list number-vertices)
-  (let ((degree-array (make-array number-vertices)))
-    (iter (for vertex from 1 to number-vertices)
-	  (for vertex-index from 0)
-	  (setf (elt degree-array vertex-index) (length (gethash vertex adjacency-list))))
-    degree-array))
+
+(defun make-graph-from-file (filename &optional (type :undirected))
+  (let ((lines (read-file-lines filename))
+	(graph (make-instance 'graph :type type))
+	(nodes (make-hash-table)))
+    (flet ((maybe-create-node (value)
+	     (alexandria:if-let (node (gethash value nodes))
+	       node
+	       (setf (gethash value nodes) (add-node graph value)))))
+     (iter (for line in (rest lines))
+	   (destructuring-bind-integers (source target) line
+	     (let ((source-node (maybe-create-node source))
+		   (target-node (maybe-create-node target)))
+	       (add-edge graph
+			 (gethash source nodes source-node)
+			 (gethash target nodes target-node))))))
+    graph))
 (define-rosalind-problem :deg degree-array
   "degree array"
-  (let* ((lines (read-file-lines input-filename))
-	 (adjacency-list (make-adjacency-list lines)))
-    (destructuring-bind-integers (number-vertices number-edges) (first lines)
-      (declare (ignorable number-edges))
-      (print-integer-list
-	      (iter (for degree in-vector (make-degree-array adjacency-list number-vertices))
-		    (collect degree))))))
+  (let ((graph (make-graph-from-file input-filename)))
+    (let ((degree-data
+	   (iter (for node node-of-graph graph)
+		 (collect (cons (value node) (degree node))))))
+      (with-output-to-file (stream)
+	(print-integer-list
+	 (mapcar #'second (sort degree-data #'< :key #'car)) stream)))))
 
 (define-rosalind-problem :ddeg double-degree-array
   "double-degree array"

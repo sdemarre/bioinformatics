@@ -30,7 +30,7 @@
     (destructuring-bind-integers  (generations pairs-per-litter) problem-data
       (ros-fib generations pairs-per-litter))))
 
-(defun rosalind-gc-content (dna)
+(defun gc-content (dna)
   (* 1.0 (/ (iter (for letter in-vector dna)
 		  (counting (or (char= letter #\C) (char= letter #\G))))
 	    (length dna))))
@@ -38,7 +38,7 @@
   "computing gc content"
   (with-fasta-input-lines (lines)
     (iter (for (name dna) in lines)
-	  (finding (list name (* 100 (rosalind-gc-content dna))) maximizing (rosalind-gc-content dna)))))
+	  (finding (list name (* 100 (gc-content dna))) maximizing (gc-content dna)))))
 
 (defun hamming-distance (dna1 dna2)
   (iter (for letter1 in-vector dna1)
@@ -269,13 +269,22 @@
   (iter (for other-dna-string in dna-string-list)
 	(alexandria:when-let (pos (position-of-substring dna-string start end other-dna-string))
 	  (return (cons other-dna-string pos)))))
+
 (define-rosalind-problem :long ros-assemble-genome
-  "genome assembly as shortest superstring"
-  (with-fasta-input-lines (fasta-data)
-    (iter (for dna-string on (mapcar #'second fasta-data))
-	  (let ((prefix-start 0)
-		(prefix-end (floor (length (car dna-string)) 2)))
-	    (alexandria:if-let
-		((match-data (string-with-matching-subseq (car dna-string) prefix-start prefix-end (cdr dna-string))))
-	      )))
-))
+  "genome assembly as shortest superstring")
+
+(defun log-prob-of-string-given-gc (dna-string gc-content)
+  (iter (for letter in-vector dna-string)
+	(summing (log (if (or (char= letter #\A) (char= letter #\T))
+			  (/ (- 1 gc-content) 2)
+			  (/ gc-content 2))
+		      10))))
+(define-rosalind-problem :prob ros-random-string
+  "introduction to random strings"
+  (with-input-lines (lines)
+    (let* ((dna-string (first lines))
+	   (gc-content-values (parse-float-list (second lines))))
+      (let ((log-probs (iter (for gc-content in gc-content-values)
+			     (collect (log-prob-of-string-given-gc dna-string gc-content)))))
+       (with-output-to-file (stream)
+	 (print-float-list log-probs stream))))))
