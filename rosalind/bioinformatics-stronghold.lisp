@@ -325,3 +325,17 @@
     (let ((result (kmer-composition "ACGT" dna-string 4)))
       (with-output-to-file (stream)
 	(print-integer-list result stream)))))
+
+(defun probability-to-create-random-string-with-gc (gc dna-string)
+  (iter (for letter in-vector dna-string)
+	(multiply (if (or (char= #\A letter) (char= #\T letter))
+		      (/ (- 1 gc) 2)
+		      (/ gc 2)))))
+(define-rosalind-problem :rstr ros-match-random-motif
+  (with-input-lines (lines)
+    (destructuring-bind (count-str gc-str) (split-sequence:split-sequence #\Space (first lines))
+      (let ((*read-default-float-format* 'double-float))
+	(let* ((count (parse-integer count-str))
+	       (gc (* 1.0d0 (parse-number:parse-real-number gc-str)))
+	       (string-prob (probability-to-create-random-string-with-gc gc (second lines))))
+	  (format t "~f~%" (- 1 (expt (- 1 string-prob) count))))))))
