@@ -168,11 +168,10 @@
 		(in outer (collect (list position substring-length)))))))
 (define-rosalind-problem :revp restriction-sites
   "locating restriction sites"
-  (with-fasta-input-lines (fasta-lines)
-    (let ((dna-string (second (first fasta-lines))))
-      (with-output-to-file (output)
-	(iter (for (pos length) in (sort (find-restriction-sites dna-string) #'< :key #'first))
-	      (format output "~a ~a~%" (1+ pos) length))))))
+  (with-single-fasta-line (dna-string)
+    (with-output-to-file (output)
+      (iter (for (pos length) in (sort (find-restriction-sites dna-string) #'< :key #'first))
+	    (format output "~a ~a~%" (1+ pos) length)))))
 
 (defun fill-nth-lex-kmer (kmer monomer-vector kmer-count)
   (let ((digits (length monomer-vector)))
@@ -180,6 +179,7 @@
 	  (setf (elt kmer digit) (elt monomer-vector (mod kmer-count digits)))
 	  (setf kmer-count (floor kmer-count digits)))))
 (defun do-for-all-kmers (monomer-vector k fun)
+  "call fun for every k-mer produced with elements from monomer-vector (in lexicographical order)"
   (let ((kmer (make-array k :initial-element (elt monomer-vector 0))))
     (iter (for kmer-count from 0 to (1- (expt (length monomer-vector) k)))
 	  (fill-nth-lex-kmer kmer monomer-vector kmer-count)
@@ -302,3 +302,26 @@
 	(iter (for perm in signed-permutations)
 	      (format stream "~{~a~^ ~}~%" perm))))))
 
+
+(defun has-kmer-at-pos-p (dna-string kmer start-pos)
+  (let ((dna-string-length (length dna-string))
+	(kmer-length (length kmer)))
+    (and (<= (+ start-pos kmer-length) dna-string-length)
+	 (iter (for pos from 0 below kmer-length)
+	       (let ((dna-string-pos (+ start-pos pos)))
+		 (always (char= (elt dna-string dna-string-pos)
+				(elt kmer pos))))))))
+(defun kmer-count (dna-string kmer)
+  (iter (for pos from 0 to (1- (length dna-string)))
+	(counting (has-kmer-at-pos-p dna-string kmer pos))))
+(defun kmer-composition (source dna-string k)
+  (let (result)
+    (do-for-all-kmers
+	source k #'(lambda (v) (push (kmer-count dna-string (coerce v 'string)) result)))
+    (reverse result)))
+(define-rosalind-problem :kmer ros-kmer-composition
+  "k-mer composition"
+  (with-single-fasta-line (dna-string)
+    (let ((result (kmer-composition "ACGT" dna-string 4)))
+      (with-output-to-file (stream)
+	(print-integer-list result stream)))))
