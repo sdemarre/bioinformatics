@@ -3,7 +3,8 @@
 (defparameter *rosalind-id-info* (make-hash-table))
 
 (defmacro define-rosalind-problem (rosalind-id function-name &body body)
-  `(let ((input-filename ,(make-input-filename rosalind-id)))
+  `(let ((input-filename ,(make-input-filename rosalind-id))
+	 (output-filename ,(make-output-filename rosalind-id)))
      (setf (gethash ,rosalind-id *rosalind-id-info*) ',function-name)
      (defun ,function-name ()
        ,@body)))
@@ -25,18 +26,14 @@
 	(collect (cons id (documentation (rosalind-find-function id) 'function)))))
 
 (defun make-input-filename (problem-id)
-  (format nil "rosalind/rosalind_~a.txt" (string-downcase (symbol-name problem-id))))
-(defun make-output-filename (input-filename)
-  (format nil "~a_output.txt" (subseq input-filename 0 (- (length input-filename) 4))))
-
-(defun rosalind-lines (problem-id)
-  (read-file-lines (make-input-filename problem-id)))
+  (format nil "rosalind/data/rosalind_~a.txt" (string-downcase (symbol-name problem-id))))
+(defun make-output-filename (problem-id)
+  (format nil "rosalind/output/rosalind_~a_output.txt" (string-downcase (symbol-name problem-id))))
 
 (defmacro with-output-to-file ((stream-name) &body body)
-  `(with-open-file (,stream-name (make-output-filename input-filename) :direction :output :if-exists :supersede)
+  `(with-open-file (,stream-name output-filename :direction :output :if-exists :supersede)
      ,@body
-     (make-output-filename input-filename)))
-
+     output-filename))
 
 (defmacro with-input-lines ((lines-var-name) &body body)
   `(let ((,lines-var-name (read-file-lines input-filename)))

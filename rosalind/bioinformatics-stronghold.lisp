@@ -212,7 +212,7 @@
 (define-rosalind-problem :iev expected-offspring
   "calculating expected offspring"
   (with-single-input-line (problem-data)
-   (let ((number-couples (integer-list problem-data))
+   (let ((number-couples (parse-integer-list problem-data))
 	 (probability-for-dominant '(1 1 1 0.75 0.5 0)))
      (* 2 (iter (for k in number-couples)
 		(for p in probability-for-dominant)
@@ -292,9 +292,7 @@
     (iter (for dna-string on (mapcar #'second fasta-data))
 	  (let ((prefix-start 0)
 		(prefix-end (floor (length (car dna-string)) 2)))
-	    (alexandria:if-let
-		((match-data (string-with-matching-subseq (car dna-string) prefix-start prefix-end (cdr dna-string))))
-	      )))))
+	    ))))
 
 (defun apply-signs (list p)
   "uses the bits of p to decide when to change the sign of elements in list"
