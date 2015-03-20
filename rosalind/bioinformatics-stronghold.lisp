@@ -168,11 +168,10 @@
 		(in outer (collect (list position substring-length)))))))
 (define-rosalind-problem :revp restriction-sites
   "locating restriction sites"
-  (with-fasta-input-lines (fasta-lines)
-    (let ((dna-string (second (first fasta-lines))))
-      (with-output-to-file (output)
-	(iter (for (pos length) in (sort (find-restriction-sites dna-string) #'< :key #'first))
-	      (format output "~a ~a~%" (1+ pos) length))))))
+  (with-single-fasta-line (dna-string)
+    (with-output-to-file (output)
+      (iter (for (pos length) in (sort (find-restriction-sites dna-string) #'< :key #'first))
+	    (format output "~a ~a~%" (1+ pos) length)))))
 
 (defun fill-nth-lex-kmer (kmer monomer-vector kmer-count)
   (let ((digits (length monomer-vector)))
@@ -180,6 +179,7 @@
 	  (setf (elt kmer digit) (elt monomer-vector (mod kmer-count digits)))
 	  (setf kmer-count (floor kmer-count digits)))))
 (defun do-for-all-kmers (monomer-vector k fun)
+  "call fun for every k-mer produced with elements from monomer-vector (in lexicographical order)"
   (let ((kmer (make-array k :initial-element (elt monomer-vector 0))))
     (iter (for kmer-count from 0 to (1- (expt (length monomer-vector) k)))
 	  (fill-nth-lex-kmer kmer monomer-vector kmer-count)
@@ -270,8 +270,6 @@
 	(alexandria:when-let (pos (position-of-substring dna-string start end other-dna-string))
 	  (return (cons other-dna-string pos)))))
 
-(define-rosalind-problem :long ros-assemble-genome
-  "genome assembly as shortest superstring")
 
 (defun log-prob-of-string-given-gc (dna-string gc-content)
   (iter (for letter in-vector dna-string)
@@ -288,3 +286,73 @@
 			     (collect (log-prob-of-string-given-gc dna-string gc-content)))))
        (with-output-to-file (stream)
 	 (print-float-list log-probs stream))))))
+(define-rosalind-problem :long ros-assemble-genome
+  "genome assembly as shortest superstring"
+  (with-fasta-input-lines (fasta-data)
+    (iter (for dna-string on (mapcar #'second fasta-data))
+	  (let ((prefix-start 0)
+		(prefix-end (floor (length (car dna-string)) 2)))
+	    (alexandria:if-let
+		((match-data (string-with-matching-subseq (car dna-string) prefix-start prefix-end (cdr dna-string))))
+	      )))))
+
+(defun apply-signs (list p)
+  "uses the bits of p to decide when to change the sign of elements in list"
+  (iter (for i in list)
+	(if (zerop (mod p 2))
+	    (collect i)
+	    (collect (- i)))
+	(setf p (floor p 2))))
+(defun list-signed-permutations (list)
+  (let ((permutations (list-permutations list))
+	(l (length list)))
+    (iter outer (for permutation in permutations)
+	  (iter (for p from 0 to (1- (expt 2 l)))
+		(in outer (collect (apply-signs permutation p)))))))
+(define-rosalind-problem :sign ros-gene-oriented-orderings
+  "enumerating oriented gene orderings"
+  (with-single-input-line (line)
+    (let* ((n (parse-integer line))
+	   (signed-permutations (list-signed-permutations (iter (for i from 1 to n) (collect i)))))
+      (with-output-to-file (stream)
+	(format stream "~a~%" (length signed-permutations))
+	(iter (for perm in signed-permutations)
+	      (format stream "~{~a~^ ~}~%" perm))))))
+
+
+(defun has-kmer-at-pos-p (dna-string kmer start-pos)
+  (let ((dna-string-length (length dna-string))
+	(kmer-length (length kmer)))
+    (and (<= (+ start-pos kmer-length) dna-string-length)
+	 (iter (for pos from 0 below kmer-length)
+	       (let ((dna-string-pos (+ start-pos pos)))
+		 (always (char= (elt dna-string dna-string-pos)
+				(elt kmer pos))))))))
+(defun kmer-count (dna-string kmer)
+  (iter (for pos from 0 to (1- (length dna-string)))
+	(counting (has-kmer-at-pos-p dna-string kmer pos))))
+(defun kmer-composition (source dna-string k)
+  (let (result)
+    (do-for-all-kmers
+	source k #'(lambda (v) (push (kmer-count dna-string (coerce v 'string)) result)))
+    (reverse result)))
+(define-rosalind-problem :kmer ros-kmer-composition
+  "k-mer composition"
+  (with-single-fasta-line (dna-string)
+    (let ((result (kmer-composition "ACGT" dna-string 4)))
+      (with-output-to-file (stream)
+	(print-integer-list result stream)))))
+
+(defun probability-to-create-random-string-with-gc (gc dna-string)
+  (iter (for letter in-vector dna-string)
+	(multiply (if (or (char= #\A letter) (char= #\T letter))
+		      (/ (- 1 gc) 2)
+		      (/ gc 2)))))
+(define-rosalind-problem :rstr ros-match-random-motif
+  (with-input-lines (lines)
+    (destructuring-bind (count-str gc-str) (split-sequence:split-sequence #\Space (first lines))
+      (let ((*read-default-float-format* 'double-float))
+	(let* ((count (parse-integer count-str))
+	       (gc (* 1.0d0 (parse-number:parse-real-number gc-str)))
+	       (string-prob (probability-to-create-random-string-with-gc gc (second lines))))
+	  (format t "~f~%" (- 1 (expt (- 1 string-prob) count))))))))
