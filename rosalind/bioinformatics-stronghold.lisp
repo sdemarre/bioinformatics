@@ -76,7 +76,8 @@
   (with-input-lines (lines)
     (let* ((haystack (first lines))
 	   (needle (second lines)))
-      (format t "~{~a~^ ~}" (mapcar #'1+ (find-pattern-occurences haystack needle))))))
+      (with-output-to-file (stream)
+	  (format stream "~{~a~^ ~}" (mapcar #'1+ (find-pattern-occurences haystack needle)))))))
 
 (defun rosalind-consensus-and-profile (input-filename)
   (with-fasta-input-lines (fasta-lines)
@@ -353,4 +354,5 @@
 	(let* ((count (parse-integer count-str))
 	       (gc (* 1.0d0 (parse-number:parse-real-number gc-str)))
 	       (string-prob (probability-to-create-random-string-with-gc gc (second lines))))
-	  (format t "~f~%" (- 1 (expt (- 1 string-prob) count))))))))
+	  (with-output-to-file (stream)
+	    (format stream "~f~%" (- 1 (expt (- 1 string-prob) count)))))))))

@@ -67,8 +67,6 @@ e.g.\"AaBb\" \"aaBB\" ((0 1) (1 0)) -> AabB"
   "current-generation-profile is a hash-table with probability for every genotype"
   (let ((next-generation-profile (make-hash-table :test #'equal)))
     (iter (for (genotype probability) in-hashtable current-generation-profile)
-	  (format t "processing \"~a\"[~a]~%" genotype probability)
 	  (iter (for (child-genotype new-prob) in-hashtable (child-genotype-profile genotype mate-genotype))
-		(incf (gethash child-genotype next-generation-profile 0) (* probability new-prob)))
-	  (format t "~a~%" (alexandria:hash-table-alist next-generation-profile)))
+		(incf (gethash child-genotype next-generation-profile 0) (* probability new-prob))))
     next-generation-profile))

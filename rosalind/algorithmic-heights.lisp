@@ -46,22 +46,19 @@
 		    (collect (let ((pos (position-binary-search element sorted-array #'<)))
 		      	       (if pos (1+ pos) -1))))))))
 
-
 (defun make-graph-from-file (filename &optional (type :undirected))
   (let ((lines (read-file-lines filename))
 	(graph (make-instance 'graph :type type))
 	(nodes (make-hash-table)))
-    (flet ((maybe-create-node (value)
+    (flet ((create-or-get-node (value)
 	     (alexandria:if-let (node (gethash value nodes))
 	       node
 	       (setf (gethash value nodes) (add-node graph value)))))
      (iter (for line in (rest lines))
-	   (destructuring-bind-integers (source target) line
-	     (let ((source-node (maybe-create-node source))
-		   (target-node (maybe-create-node target)))
-	       (add-edge graph
-			 (gethash source nodes source-node)
-			 (gethash target nodes target-node))))))
+	   (destructuring-bind-integers (source-value target-value) line
+	     (let ((source-node (create-or-get-node source-value))
+		   (target-node (create-or-get-node target-value)))
+	       (add-edge graph source-node target-node)))))
     graph))
 (define-rosalind-problem :deg degree-array
   "degree array"
@@ -71,70 +68,45 @@
 		 (collect (cons (value node) (degree node))))))
       (with-output-to-file (stream)
 	(print-integer-list
-	 (mapcar #'second (sort degree-data #'< :key #'car)) stream)))))
+	 (mapcar #'cdr (sort degree-data #'< :key #'car)) stream)))))
 
 (define-rosalind-problem :ddeg double-degree-array
   "double-degree array"
-  (let* ((lines (read-file-lines input-filename))
-	 (adjacency-list (make-adjacency-list lines)))
-    (destructuring-bind-integers (number-vertices number-edges) (first lines)
-      (declare (ignorable number-edges))
-      (let ((degree-array (make-degree-array adjacency-list number-vertices)))
+  (let* ((graph (make-graph-from-file input-filename)))
+    (let ((double-degree-data
+	   (iter (for node node-of-graph graph)
+		 (collect (cons (value node)
+				(iter (for neighbour neighbour-of-node node)
+				      (summing (degree neighbour))))))))
+      (with-output-to-file (stream)
 	(print-integer-list
-	 (iter (for vertex from 1 to number-vertices)
-	       (collect (iter (for neighbour in (gethash vertex adjacency-list))
-			      (summing (elt degree-array (1- neighbour)))))))))))
+	 (mapcar #'cdr (sort double-degree-data #'< :key #'car)) stream)))))
 
-(defun shortest-distances (number-vertices adjacency-list)
-  (let ((reached-vertices (make-hash-table))
-	(reachable-vertices (list 1)))
-    (iter (while (not (null reachable-vertices)))
+(defun shortest-distances (graph)
+  (let ((nodes-distances (make-hash-table))
+	(reachable-nodes (list (find-node graph 1))))
+    (iter (while (not (null reachable-nodes)))
 	  (for distance from 0)
-	  (let (new-vertices)
-	    (iter (for vertex in reachable-vertices)
-		  (setf (gethash vertex reached-vertices) distance))
-	    (iter (for vertex in reachable-vertices)
-		  (iter (for neighbour in (gethash vertex adjacency-list))
-			(unless (gethash neighbour reached-vertices)
-			  (pushnew neighbour new-vertices))))	    
-	    (setf reachable-vertices new-vertices)))
-   (iter (for vertex from 1 to number-vertices)
-	 (collect (alexandria:if-let ((distance (gethash vertex reached-vertices)))
-		    distance
-		    -1)))))
+	  (let (new-nodes)
+	    (iter (for node in reachable-nodes)
+		  (setf (gethash node nodes-distances) distance))
+	    (iter (for node in reachable-nodes)
+		  (iter (for neighbour neighbour-of-node node)
+			(unless (gethash neighbour nodes-distances)
+			  (pushnew neighbour new-nodes))))	    
+	    (setf reachable-nodes new-nodes)))
+    (let ((value-to-node (value-to-node-hash graph)))
+      (iter (for value from 1 to (count-nodes graph))
+	    (let ((node (gethash value value-to-node)))
+	     (collect (alexandria:if-let ((distance (gethash node nodes-distances)))
+			distance
+			-1)))))))
 (define-rosalind-problem :bfs breadth-first-search
   "breadth first search"
-  (let* ((lines (read-file-lines input-filename))
-	 (adjacency-list (make-adjacency-list lines :directed)))
-    (destructuring-bind-integers (number-vertices number-edges) (first lines)
-      (declare (ignore number-edges))
-      (print-integer-list (shortest-distances number-vertices adjacency-list)))))
+  (let* ((graph (make-graph-from-file input-filename :directed)))
+    (with-output-to-file (stream)
+      (print-integer-list (shortest-distances graph) stream))))
 
-(defun make-random-graph (number-vertices number-edges &optional (stream t))
-  (format stream "~a ~a~%" number-vertices number-edges)
-  (let (edge-list)
-    (iter (until (= number-edges (length edge-list)))
-	  (let ((v1 (1+ (random number-vertices)))
-		(v2 (1+ (random number-vertices))))
-	    (iter (while (= v1 v2))
-		  (setf v2 (1+ (random number-vertices))))
-	    (pushnew (cons  v1 v2) edge-list
-		    :test #'(lambda (e1 e2) (and (= (car e1) (car e2)) (= (cdr e1) (cdr e2)))))))
-    (iter (for edge in edge-list)
-	  (format stream "~a ~a~%" (car edge) (cdr edge)))))
-(defun make-bfs-graph (number-vertices number-edges)
-  (with-open-file (stream (make-input-filename :bfs) :direction :output :if-exists :supersede)
-    (make-random-graph number-vertices number-edges stream)))
-
-(defun make-bfs-dot ()
-  (with-open-file (stream "rosalind_bfs.dot" :direction :output :if-exists :supersede)
-    (make-dot-output (make-adjacency-list (rosalind-lines :bfs) :directed) stream)))
-(defun make-dot-output (adjacency-list &optional (stream stream))
-  (format stream "digraph g {~%")
-  (iter (for (vertex neighbours) in-hashtable adjacency-list)
-	(iter (for neighbour in neighbours)
-	      (format stream "  n~a -> n~a;~%" vertex neighbour)))
-  (format stream "}~%"))
 
 (defun majority-element (int-list)
   (let* ((counts (make-hash-table))

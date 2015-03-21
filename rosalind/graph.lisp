@@ -21,7 +21,7 @@
    (graph :reader graph :initarg :graph)))
 (defclass edge (property-mixin)
   ((head :accessor head :initarg :source)
-   (tail :accessor tail :initarg :tail)
+   (target :accessor target :initarg :target)
    (graph :reader graph :initarg :graph)))
 
 (defmethod add-node ((this graph) node-value)
@@ -29,11 +29,19 @@
     (vector-push-extend node (slot-value this 'nodes))
     node))
 
-(defmethod add-edge ((this graph) (source node) (tail node))
-  (vector-push-extend (make-instance 'edge :source source :tail tail :graph this) (slot-value this 'edges))
-  (vector-push-extend tail (gethash source (slot-value this 'adjacency-list) (make-array 10 :adjustable t :fill-pointer 0)))
-  (unless (eq :directed (graph-type this))
-    (vector-push-extend source (gethash tail (slot-value this 'adjacency-list) (make-array 10 :adjustable t :fill-pointer 0)))))
+(defmethod add-edge ((this graph) (source node) (target node))
+  (vector-push-extend (make-instance 'edge :source source :target target :graph this) (slot-value this 'edges))
+  (macrolet ((get-adjacency-list (s)
+	       `(gethash ,s (slot-value this 'adjacency-list))))
+    (symbol-macrolet ((source-adjacency-list (get-adjacency-list source))
+		      (target-adjacency-list (get-adjacency-list target)))
+      (unless source-adjacency-list
+	(setf source-adjacency-list (make-array 10 :adjustable t :fill-pointer 0)))
+      (vector-push-extend target source-adjacency-list)
+      (when (eq :undirected (graph-type this))
+	(unless target-adjacency-list
+	  (setf target-adjacency-list (make-array 10 :adjustable t :fill-pointer 0)))
+	(vector-push-extend source target-adjacency-list)))))
 
 (defmethod count-nodes ((this graph))
   (length (slot-value this 'nodes)))
@@ -66,3 +74,15 @@
     `(progn
        (with ,node = ,n)
        (for ,var in-vector (gethash ,node (slot-value (graph ,node) 'adjacency-list))))))
+
+(defmethod find-node ((this graph) node-value &optional (test #'eql))
+  (iter (for node node-of-graph this)
+	(when (funcall test node-value (value node))
+	  (return node))))
+
+(defmethod value-to-node-hash ((this graph) &optional (test 'eql))
+  (let ((result (make-hash-table :test test)))
+    (iter (for node node-of-graph this)
+	  (setf (gethash (value node) result) node))
+    result))
+

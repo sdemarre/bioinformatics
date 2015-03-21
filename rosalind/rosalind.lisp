@@ -5,6 +5,7 @@
 (defmacro define-rosalind-problem (rosalind-id function-name &body body)
   `(let ((input-filename ,(make-input-filename rosalind-id))
 	 (output-filename ,(make-output-filename rosalind-id)))
+     (declare (ignorable output-filename))
      (setf (gethash ,rosalind-id *rosalind-id-info*) ',function-name)
      (defun ,function-name ()
        ,@body)))
@@ -52,3 +53,9 @@
     `(with-fasta-input-lines (,flines)
        (let ((,fasta-line-var-name (second (first ,flines))))
 	 ,@body))))
+
+(defun rosalind-run-all ()
+  (let ((problem-ids  (mapcar #'car (list-solved-rosalind-problems))))
+    (iter (for id in problem-ids)
+	  (format t "running ~a~%" id)
+	  (rosalind-run id))))

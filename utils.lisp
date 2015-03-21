@@ -181,11 +181,19 @@ returns a list of positions in the genome where kmer was found."
   `(destructuring-bind ,vars (mapcar #'parse-integer (split-sequence:split-sequence #\Space ,expr))
      ,@body))
 
-(defun parse-integer-list (string)
-  (mapcar #'parse-integer (split-sequence:split-sequence #\Space string)))
+(defun parse-list (string fun)
+  (mapcar fun (split-sequence:split-sequence #\Space string)))
 
+(defun parse-integer-list (string)
+  (parse-list string #'parse-integer))
 (defun print-integer-list (list &optional (stream t))
   (format stream "~{~a~^ ~}~%" list))
+
+(defun parse-float-list (string)
+  (let ((*read-default-float-format* 'double-float))
+    (parse-list string #'parse-number:parse-real-number)))
+(defun print-float-list (list &optional (stream t))
+  (format stream "~{~f~^ ~}~%" list))
 
 (defun fact (n)
   (iter (for i from 1 to n)
