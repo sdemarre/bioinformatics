@@ -181,7 +181,7 @@
 	  (setf kmer-count (floor kmer-count digits)))))
 (defun do-for-all-kmers (monomer-vector k fun)
   "call fun for every k-mer produced with elements from monomer-vector (in lexicographical order)"
-  (let ((kmer (make-array k :initial-element (elt monomer-vector 0))))
+  (let ((kmer (coerce (make-array k :initial-element (elt monomer-vector 0)) 'string)))
     (iter (for kmer-count from 0 to (1- (expt (length monomer-vector) k)))
 	  (fill-nth-lex-kmer kmer monomer-vector kmer-count)
 	  (funcall fun kmer))))
@@ -191,7 +191,7 @@
       (let* ((monomer-vector (remove #\Space (first lines)))
 	     (k (parse-integer (second lines))))
 	(with-output-to-file (s)
-	  (do-for-all-kmers monomer-vector k #'(lambda (v) (format s "~a~%" (coerce v 'string))))))))
+	  (do-for-all-kmers monomer-vector k #'(lambda (v) (format s "~a~%" v)))))))
 
 (define-rosalind-problem :grph overlap-graphs
   "overlap graphs"
@@ -330,10 +330,10 @@
 (defun kmer-count (dna-string kmer)
   (iter (for pos from 0 to (1- (length dna-string)))
 	(counting (has-kmer-at-pos-p dna-string kmer pos))))
-(defun kmer-composition (source dna-string k)
+(defun kmer-composition (monomers dna-string k)
   (let (result)
     (do-for-all-kmers
-	source k #'(lambda (v) (push (kmer-count dna-string (coerce v 'string)) result)))
+	monomers k #'(lambda (kmer) (push (kmer-count dna-string kmer) result)))
     (reverse result)))
 (define-rosalind-problem :kmer ros-kmer-composition
   "k-mer composition"
@@ -356,3 +356,18 @@
 	       (string-prob (probability-to-create-random-string-with-gc gc (second lines))))
 	  (with-output-to-file (stream)
 	    (format stream "~f~%" (- 1 (expt (- 1 string-prob) count)))))))))
+
+(defun enumerate-words (letters max-word-length fun &optional current-word (current-word-length 0))
+  (unless (zerop current-word-length)
+    (funcall fun current-word))
+  (unless (= current-word-length max-word-length)
+    (iter (for letter in letters)
+	  (enumerate-words letters max-word-length fun (cons letter current-word) (1+ current-word-length)))))
+(define-rosalind-problem :lexv ros-string-diff-lengths
+  "ordering strings ov varying length lexicographically"
+  (with-input-lines (lines)
+    (let ((letters (split-sequence:split-sequence #\Space (first lines)))
+	  (max-word-length (parse-integer (second lines))))
+      (with-output-to-file (s)
+	(enumerate-words letters max-word-length
+			 #'(lambda (w) (format s "~{~a~}~%" (reverse w))))))))
