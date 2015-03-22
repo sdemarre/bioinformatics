@@ -186,8 +186,12 @@ returns a list of positions in the genome where kmer was found."
 
 (defun parse-integer-list (string)
   (parse-list string #'parse-integer))
+(defun parse-integer-vector (string)
+  (coerce (parse-integer-list string) 'vector))
 (defun print-integer-list (list &optional (stream t))
   (format stream "~{~a~^ ~}~%" list))
+(defun print-integer-vector (vector &optional (stream t))
+  (print-integer-list (iter (for e in-vector vector) (collect e)) stream))
 
 (defun parse-float-list (string)
   (let ((*read-default-float-format* 'double-float))

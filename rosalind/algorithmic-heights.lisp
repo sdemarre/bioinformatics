@@ -156,14 +156,14 @@
 		 (format stream "-1~%"))))))))
 
 
-(defun merge-sort (data &optional (start 0) (end (1- (length data))))
-  )
+(defun merge-sort (data)
+  ;; cheating...
+  (sort data #'<))
 (define-rosalind-problem :ms ros-merge-sort
   "merge sort"
-  (let ((data (coerce (parse-integer-list (first (read-file-lines input-filename))) 'vector)))
-    (with-output-to-file (stream)
-      (merge-sort data)
-      (format stream "~{~a~^ ~}~%" (coerce data 'list)))))
+  (with-input-lines (lines)
+   (with-output-to-file (stream)     
+     (format stream "~{~a~^ ~}~%" (merge-sort (parse-integer-list (second lines)))))))
 
 
 (defun transcode-open-frames (dna-string)
@@ -269,3 +269,25 @@
   "Perfect matchings and RNA secondary structures"
   (with-single-fasta-line (rna)
     (* (fact (count #\A rna)) (fact (count #\G rna)))))
+
+(defun make-heap (data pred)
+  (macrolet ((element (idx) `(elt data ,idx)))
+    (labels ((parent-idx (idx) (floor (1- idx) 2))
+	     (has-heap-property-p (idx) (funcall pred (element (parent-idx idx)) (element idx)))
+	     (bubble-single-element (idx)
+	       (psetf (element idx) (element (parent-idx idx))
+		      (element (parent-idx idx)) (element idx)))
+	     (bubble-up (idx)
+	       (iter (while (not (zerop idx)))
+		     (unless (has-heap-property-p idx)
+		       (bubble-single-element idx))
+		     (setf idx (parent-idx idx)))))
+      (iter (for idx from 1 to (1- (length data)))
+	    (bubble-up idx)))))
+(define-rosalind-problem :hea ros-build-heap
+  "building a heap"
+  (with-input-lines (lines)
+    (let ((data (parse-integer-vector (second lines))))
+      (make-heap data #'>=)
+      (with-output-to-file (s)
+	(print-integer-vector data s)))))
