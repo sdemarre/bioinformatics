@@ -46,6 +46,10 @@
       (do-for-set-elements this #'(lambda (el) (unless (has-element-p other-set el)
 						 (add-element difference el))))))
 
+(defmethod rset-equal ((this rosalind-set) (other rosalind-set))
+  (and (empty-set-p (rset-difference this other))
+       (empty-set-p (rset-difference other this))))
+
 (defmethod rset-complement ((this rosalind-set))
   "rosalind-set complement"
   (with-new-set complement

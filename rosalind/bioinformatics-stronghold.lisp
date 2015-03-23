@@ -71,7 +71,7 @@
 		    (butlast (rna-to-protein (first lines))))
 	    'string)))
 
-(define-rosalind-problem :subs rosalind-find-motifs
+(define-rosalind-problem :subs ros-find-motifs
   "finding a motif in dna"
   (with-input-lines (lines)
     (let* ((haystack (first lines))
