@@ -371,3 +371,57 @@
       (with-output-to-file (s)
 	(enumerate-words letters max-word-length
 			 #'(lambda (w) (format s "~{~a~}~%" (reverse w))))))))
+
+
+(defun transition-transversion-ratio (dna-string1 dna-string2)
+  (let ((transitions 0)
+	(transversions 0))
+    (iter (for a1 in-vector dna-string1)
+	  (for a2 in-vector dna-string2)
+	  (unless (char= a1 a2)
+	    (cond ((or (char= a1 #\A) (char= a1 #\G))
+		   (if (or (char= a2 #\T) (char= a2 #\C))
+		       (incf transversions)
+		       (incf transitions)))
+		  (t (if (or (char= a2 #\T) (char= a2 #\C))
+			 (incf transitions)
+			 (incf transversions))))))
+    (/ transitions transversions)))
+(define-rosalind-problem :tran ros-transitions-transversions
+  "transitions and transversions"
+  (with-fasta-input-lines (fasta-data)
+    (let ((s1 (second (first fasta-data)))
+	  (s2 (second (second fasta-data))))
+      (with-output-to-file (s)
+	(format s "~f~%" (transition-transversion-ratio s1 s2))))))
+
+(defun distance-matrix (dna-strings)
+  (iter (for s1 in dna-strings)
+	(collect (iter (for s2 in dna-strings)
+		       (collect (/ (hamming-distance s1 s2) (length s1)))))))
+(define-rosalind-problem :pdst ros-dist-mat
+  "creating a distance matrix"
+  (with-fasta-input-lines (fasta-data)
+    (let ((matrix (distance-matrix (mapcar #'second fasta-data))))
+      (with-output-to-file (s)
+	(format s "~{~{~f~^ ~}~%~}" matrix)))))
+
+(define-rosalind-problem :sset ros-subsets
+  "counting subsets"
+  (with-single-input-line (elements)
+    (with-output-to-file (s)
+      (format s "~a~%" (mod (expt 2 (parse-integer elements)) 1000000)))))
+
+(define-rosalind-problem :seto ros-set-operations
+  "introduction to set operations"
+  (with-input-lines (lines)
+    (let* ((set-size (parse-integer (first lines)))
+	   (s1 (parse-rosalind-set set-size (second lines)))
+	   (s2 (parse-rosalind-set set-size (third lines))))
+      (with-output-to-file (stream)
+	(print-set (rset-union s1 s2) stream) (terpri stream)
+	(print-set (rset-intersection s1 s2) stream) (terpri stream)
+	(print-set (rset-difference s1 s2) stream) (terpri stream)
+	(print-set (rset-difference s2 s1) stream) (terpri stream)
+	(print-set (rset-complement s1) stream) (terpri stream)
+	(print-set (rset-complement s2) stream) (terpri stream)))))
