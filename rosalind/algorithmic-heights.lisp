@@ -50,7 +50,7 @@
 (defun make-graph-from-file (filename &optional (type :undirected))
   (let* ((lines (read-file-lines filename))
 	 (graph (make-instance 'graph :type type)))
-    (destructuring-bind-integers (count-nodes count-edges) (first lines)
+    (destructuring-bind-integers (count-nodes &optional count-edges) (first lines)
       (declare (ignorable count-edges))
       (let ((nodes (make-array (1+ count-nodes))))
 	(iter (for node-value from 1 to count-nodes)
@@ -317,3 +317,9 @@
       (partition data #'<=)
       (with-output-to-file (s)
 	(print-integer-vector data s)))))
+
+(define-rosalind-problem :tree ros-complete-tree
+  "completing a tree"
+  (let ((graph (make-graph-from-file input-filename)))
+    (with-output-to-file (s)
+      (format s "~a~%" (1- (count-connected-components graph))))))
