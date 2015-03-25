@@ -53,9 +53,21 @@
     `(with-fasta-input-lines (,flines)
        (let ((,fasta-line-var-name (second (first ,flines))))
 	 ,@body))))
+(defmacro with-fasta-dna-lines ((dna-strings-var-name) &body body)
+  (let ((fasta-data (gensym)))
+    `(with-fasta-input-lines (,fasta-data)
+       (let ((,dna-strings-var-name (mapcar #'second ,fasta-data)))
+	 ,@body))))
 
 (defun rosalind-run-all ()
   (let ((problem-ids  (mapcar #'car (list-solved-rosalind-problems))))
     (iter (for id in problem-ids)
 	  (format t "running ~a~%" id)
 	  (rosalind-run id))))
+
+(defmacro between-forms (between-form &body body)
+  `(progn
+     ,@(iter (for form on body)
+	 (collect (car form))
+	 (unless (null (cdr form))
+	   (collect between-form))))))

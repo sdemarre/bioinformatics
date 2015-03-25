@@ -401,8 +401,8 @@
 		       (collect (/ (hamming-distance s1 s2) (length s1)))))))
 (define-rosalind-problem :pdst ros-dist-mat
   "creating a distance matrix"
-  (with-fasta-input-lines (fasta-data)
-    (let ((matrix (distance-matrix (mapcar #'second fasta-data))))
+  (with-fasta-dna-lines (dna-strings)
+    (let ((matrix (distance-matrix dna-strings)))
       (with-output-to-file (s)
 	(format s "~{~{~f~^ ~}~%~}" matrix)))))
 
@@ -419,9 +419,32 @@
 	   (s1 (parse-rosalind-set set-size (second lines)))
 	   (s2 (parse-rosalind-set set-size (third lines))))
       (with-output-to-file (stream)
-	(print-set (rset-union s1 s2) stream) (terpri stream)
-	(print-set (rset-intersection s1 s2) stream) (terpri stream)
-	(print-set (rset-difference s1 s2) stream) (terpri stream)
-	(print-set (rset-difference s2 s1) stream) (terpri stream)
-	(print-set (rset-complement s1) stream) (terpri stream)
-	(print-set (rset-complement s2) stream) (terpri stream)))))
+	(between-forms (terpri stream)	  
+	  (print-set (rset-union s1 s2) stream)
+	  (print-set (rset-intersection s1 s2) stream)
+	  (print-set (rset-difference s1 s2) stream)
+	  (print-set (rset-difference s2 s1) stream)
+	  (print-set (rset-complement s1) stream)
+	  (print-set (rset-complement s2) stream))))))
+
+(defun spliced-motif-positions (dna-string motif)
+  (let ((target-position 0))
+    (iter (for letter in-vector motif)
+	  (collect (setf target-position (position letter dna-string :start target-position)))
+	  (incf target-position))))
+(defun verify-spliced-positions (spliced-positions dna-string motif)
+  (assert (= (length spliced-positions) (length motif)))
+  (assert (equalp (remove-duplicates spliced-positions) spliced-positions))
+  (iter (for pos in spliced-positions)
+	(for motif-pos from 0)
+	(assert (char= (elt dna-string pos) (elt motif motif-pos)))))
+(define-rosalind-problem :sseq ros-find-spliced-motif
+  "finding a spliced motif"
+  (with-fasta-dna-lines (dna-strings)
+    (let ((dna-string (first dna-strings))
+	  (motif (second dna-strings)))
+     (let ((spliced-positions (spliced-motif-positions dna-string motif)))
+       (with-output-to-file (s)
+	 (print-integer-list (mapcar #'1+ spliced-positions) s))))))
+
+
