@@ -1,6 +1,6 @@
 (in-package :bioinformatics)
 
-(define-rosalind-problem :dna rosalind-dna
+(define-rosalind-problem :dna
   "counting dna nucleotides"
   (with-single-input-line (dna)
    (let ((count-hash (make-hash-table)))
@@ -10,12 +10,12 @@
 	     (iter (for letter in-vector "ACGT")
 		   (collect (gethash letter count-hash)))))))
 
-(define-rosalind-problem :rna rosalind-rna
+(define-rosalind-problem :rna
   "transcribing dna into rna"
   (with-single-input-line (dna)
     (cl-ppcre:regex-replace-all "T" dna "U")))
 
-(define-rosalind-problem :revc rosalind-revc
+(define-rosalind-problem :revc
   "complementing a strand of dna"
   (with-single-input-line (dna)
     (reverse-complement dna)))
@@ -24,7 +24,7 @@
   (cond ((= generations 0) fnm1)
 	((= generations 1) fnm2)
 	(t (ros-fib (1- generations) pairs-per-litter fnm1 (+ fnm1 (* pairs-per-litter fnm2))))))
-(define-rosalind-problem :fib rosalind-fib
+(define-rosalind-problem :fib
   "rabbits and recurrence relations"
   (with-single-input-line (problem-data)
     (destructuring-bind-integers  (generations pairs-per-litter) problem-data
@@ -34,7 +34,7 @@
   (* 1.0 (/ (iter (for letter in-vector dna)
 		  (counting (or (char= letter #\C) (char= letter #\G))))
 	    (length dna))))
-(define-rosalind-problem :gc rosalind-gc
+(define-rosalind-problem :gc
   "computing gc content"
   (with-fasta-input-lines (lines)
     (iter (for (name dna) in lines)
@@ -44,7 +44,7 @@
   (iter (for letter1 in-vector dna1)
 	(for letter2 in-vector dna2)
 	(counting (not (char= letter1 letter2)))))
-(define-rosalind-problem :hamm rosalind-hamming
+(define-rosalind-problem :hamm
   "counting point mutations"
   (with-input-lines (lines)
     (let* ((dna1 (first lines))
@@ -56,13 +56,13 @@
 	(l heterozygous-count)
 	(m homozygous-recessive-count))
     (/ (+ (* k (1- k)) (* 2 k l) (* 2 k m) (* m l)  (/ (* 3 l (1- l)) 4)) (* (+ k l m) (+ k l m -1)))))
-(define-rosalind-problem :iprb mendels-first-law
+(define-rosalind-problem :iprb
   "mendel's first law"
   (with-input-lines (lines)
     (destructuring-bind-integers (homozygous-dominant-count heterozygous-count homozygous-recessive-count) (first lines)
       (float (rosalind-mendelian homozygous-dominant-count heterozygous-count homozygous-recessive-count)))))
 
-(define-rosalind-problem :prot rosalind-rna-to-protein
+(define-rosalind-problem :prot
   "translating rna into protein"
   (with-input-lines (lines)
     (coerce (mapcar #'(lambda (s) (if (= 1 (length s))
@@ -71,7 +71,7 @@
 		    (butlast (rna-to-protein (first lines))))
 	    'string)))
 
-(define-rosalind-problem :subs ros-find-motifs
+(define-rosalind-problem :subs
   "finding a motif in dna"
   (with-input-lines (lines)
     (let* ((haystack (first lines))
@@ -90,7 +90,7 @@
     (format stream "C: ~{~A~^ ~}~%" (coerce c-prof 'list))
     (format stream "G: ~{~A~^ ~}~%" (coerce g-prof 'list))
     (format stream "T: ~{~A~^ ~}~%" (coerce t-prof 'list))))
-(define-rosalind-problem :cons rosalind-consensus-and-profile-to-file
+(define-rosalind-problem :cons
   "consensus and profile"
   (with-output-to-file (output)
     (rosalind-consensus-and-profile-print output input-filename)))
@@ -113,7 +113,7 @@
       (print-generation generations generation-counts))
     (iter (for count in-vector generation-counts)
 	  (sum count))))
-(define-rosalind-problem :fibd rosalind-mortal-rabits
+(define-rosalind-problem :fibd
   "mortal fibonacci rabbits"
   (with-single-input-line (problem-data)
    (destructuring-bind-integers (generations pair-lifetime) problem-data
@@ -130,7 +130,7 @@
 (defun all-have-common-substr (dna-string-1 substr-start substr-length other-strings)
   (iter (for dna-string-2 in other-strings)
 	(always (has-common-substr dna-string-1 substr-start substr-length dna-string-2))))
-(define-rosalind-problem :lcsm rosalind-longest-common-substr
+(define-rosalind-problem :lcsm
   "finding a shared motif"
   (with-fasta-input-lines (fasta-lines)
    (let* ((dna-strings (mapcar #'second fasta-lines))
@@ -146,7 +146,7 @@
     (iter (for i in list)
 	  (appending (mapcar #'(lambda (r) (cons i r)) (list-permutations (remove i list)))))
     (list nil)))
-(define-rosalind-problem :perm rosalind-permutations
+(define-rosalind-problem :perm
   "enumerating gene orders"
   (with-single-input-line (l)
    (let* ((list-length (parse-integer l))
@@ -167,7 +167,7 @@
 	(iter (for position from 0 to (- (length dna-string) substring-length))
 	      (when (is-reverse-palindrome-subseq dna-string position substring-length)
 		(in outer (collect (list position substring-length)))))))
-(define-rosalind-problem :revp restriction-sites
+(define-rosalind-problem :revp
   "locating restriction sites"
   (with-single-fasta-line (dna-string)
     (with-output-to-file (output)
@@ -185,7 +185,7 @@
     (iter (for kmer-count from 0 to (1- (expt (length monomer-vector) k)))
 	  (fill-nth-lex-kmer kmer monomer-vector kmer-count)
 	  (funcall fun kmer))))
-(define-rosalind-problem :lexf rosalind-enumerate-kmers-lex
+(define-rosalind-problem :lexf
   "enumerating k-mers lexicographically"
   (with-input-lines (lines)
       (let* ((monomer-vector (remove #\Space (first lines)))
@@ -193,7 +193,7 @@
 	(with-output-to-file (s)
 	  (do-for-all-kmers monomer-vector k #'(lambda (v) (format s "~a~%" v)))))))
 
-(define-rosalind-problem :grph overlap-graphs
+(define-rosalind-problem :grph
   "overlap graphs"
   (with-fasta-input-lines (fasta-data)
     (let ((entries-with-prefix (make-hash-table :test #'equal))
@@ -210,7 +210,7 @@
 			  (when (not (string= prefix-fasta-id postfix-fasta-id))
 			    (format output "~a ~a~%" postfix-fasta-id prefix-fasta-id)))))))))
 
-(define-rosalind-problem :iev expected-offspring
+(define-rosalind-problem :iev
   "calculating expected offspring"
   (with-single-input-line (problem-data)
    (let ((number-couples (parse-integer-list problem-data))
@@ -219,7 +219,7 @@
 		(for p in probability-for-dominant)
 		(summing (* k p)))))))
 
-(define-rosalind-problem :lia independent-alleles
+(define-rosalind-problem :lia
   "independent-alleles"
   (with-single-input-line (problem-data)
    (destructuring-bind-integers (k n) problem-data
@@ -227,18 +227,18 @@
        (float (iter (for i from n to (expt 2 k))
 		    (summing (probability-for-events profile "AaBb" i (expt 2 k)))))))))
 
-(define-rosalind-problem :prtm ros-protein-mass
+(define-rosalind-problem :prtm
   "calculating protein mass"
   (with-single-input-line (problem-data)
     (protein-mass problem-data)))
 
-(define-rosalind-problem :mrna ros-infer-rna-from-protein
+(define-rosalind-problem :mrna
   "infering mRNA from protein"  
   (with-single-input-line (protein-string)
     ;; account for 3 possible stop codons
     (mod (* 3 (count-possible-rna-sources-for-protein protein-string)) (expt 10 6))))
 
-(define-rosalind-problem :splc ros-splice-rna
+(define-rosalind-problem :splc
   "rna splicing"
   (with-fasta-input-lines (fasta-data)
    (let* ((dna (second (first fasta-data)))
@@ -250,7 +250,7 @@
 
 (defun get-uniprot-protein (protein-id)
   (second (car (get-uniprot-fasta-cached protein-id))))
-(define-rosalind-problem :mprt ros-find-protein-motif
+(define-rosalind-problem :mprt
   "finding a protein motif"
   (with-input-lines (lines)
     (with-output-to-file (stream)
@@ -260,7 +260,7 @@
 		(format stream "~a~%" protein-id)
 		(print-integer-list motif-positions stream)))))))
 
-(define-rosalind-problem :pper ros-partial-permutations
+(define-rosalind-problem :pper
   "partial permutations"
   (with-single-input-line (problem-data)
     (destructuring-bind-integers (n p) problem-data
@@ -278,7 +278,7 @@
 			  (/ (- 1 gc-content) 2)
 			  (/ gc-content 2))
 		      10))))
-(define-rosalind-problem :prob ros-random-string
+(define-rosalind-problem :prob
   "introduction to random strings"
   (with-input-lines (lines)
     (let* ((dna-string (first lines))
@@ -287,10 +287,10 @@
 			     (collect (log-prob-of-string-given-gc dna-string gc-content)))))
        (with-output-to-file (stream)
 	 (print-float-list log-probs stream))))))
-(define-rosalind-problem :long ros-assemble-genome
+(define-rosalind-problem :long
   "genome assembly as shortest superstring"
-  (with-fasta-input-lines (fasta-data)
-    (iter (for dna-string on (mapcar #'second fasta-data))
+  (with-fasta-dna-lines (dna-strings)
+    (iter (for dna-string on dna-strings)
 	  (let ((prefix-start 0)
 		(prefix-end (floor (length (car dna-string)) 2)))
 	    ))))
@@ -308,7 +308,7 @@
     (iter outer (for permutation in permutations)
 	  (iter (for p from 0 to (1- (expt 2 l)))
 		(in outer (collect (apply-signs permutation p)))))))
-(define-rosalind-problem :sign ros-gene-oriented-orderings
+(define-rosalind-problem :sign
   "enumerating oriented gene orderings"
   (with-single-input-line (line)
     (let* ((n (parse-integer line))
@@ -335,7 +335,7 @@
     (do-for-all-kmers
 	monomers k #'(lambda (kmer) (push (kmer-count dna-string kmer) result)))
     (reverse result)))
-(define-rosalind-problem :kmer ros-kmer-composition
+(define-rosalind-problem :kmer
   "k-mer composition"
   (with-single-fasta-line (dna-string)
     (let ((result (kmer-composition "ACGT" dna-string 4)))
@@ -347,7 +347,7 @@
 	(multiply (if (or (char= #\A letter) (char= #\T letter))
 		      (/ (- 1 gc) 2)
 		      (/ gc 2)))))
-(define-rosalind-problem :rstr ros-match-random-motif
+(define-rosalind-problem :rstr
   (with-input-lines (lines)
     (destructuring-bind (count-str gc-str) (split-sequence:split-sequence #\Space (first lines))
       (let ((*read-default-float-format* 'double-float))
@@ -363,7 +363,7 @@
   (unless (= current-word-length max-word-length)
     (iter (for letter in letters)
 	  (enumerate-words letters max-word-length fun (cons letter current-word) (1+ current-word-length)))))
-(define-rosalind-problem :lexv ros-string-diff-lengths
+(define-rosalind-problem :lexv
   "ordering strings ov varying length lexicographically"
   (with-input-lines (lines)
     (let ((letters (split-sequence:split-sequence #\Space (first lines)))
@@ -387,7 +387,7 @@
 			 (incf transitions)
 			 (incf transversions))))))
     (/ transitions transversions)))
-(define-rosalind-problem :tran ros-transitions-transversions
+(define-rosalind-problem :tran
   "transitions and transversions"
   (with-fasta-input-lines (fasta-data)
     (let ((s1 (second (first fasta-data)))
@@ -399,20 +399,20 @@
   (iter (for s1 in dna-strings)
 	(collect (iter (for s2 in dna-strings)
 		       (collect (/ (hamming-distance s1 s2) (length s1)))))))
-(define-rosalind-problem :pdst ros-dist-mat
+(define-rosalind-problem :pdst
   "creating a distance matrix"
   (with-fasta-dna-lines (dna-strings)
     (let ((matrix (distance-matrix dna-strings)))
       (with-output-to-file (s)
 	(format s "~{~{~f~^ ~}~%~}" matrix)))))
 
-(define-rosalind-problem :sset ros-subsets
+(define-rosalind-problem :sset
   "counting subsets"
   (with-single-input-line (elements)
     (with-output-to-file (s)
       (format s "~a~%" (mod (expt 2 (parse-integer elements)) 1000000)))))
 
-(define-rosalind-problem :seto ros-set-operations
+(define-rosalind-problem :seto
   "introduction to set operations"
   (with-input-lines (lines)
     (let* ((set-size (parse-integer (first lines)))
@@ -438,7 +438,7 @@
   (iter (for pos in spliced-positions)
 	(for motif-pos from 0)
 	(assert (char= (elt dna-string pos) (elt motif motif-pos)))))
-(define-rosalind-problem :sseq ros-find-spliced-motif
+(define-rosalind-problem :sseq
   "finding a spliced motif"
   (with-fasta-dna-lines (dna-strings)
     (let ((dna-string (first dna-strings))

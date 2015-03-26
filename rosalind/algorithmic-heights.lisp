@@ -11,7 +11,7 @@
 			 data-k-1 data-k)
 		  (incf swaps-count))))
     swaps-count))
-(define-rosalind-problem :ins insertion-sort-swaps
+(define-rosalind-problem :ins
   "insertion sort"
   (let* ((data (second (read-file-lines input-filename)))
 	 (unsorted-data (parse-integer-list data)))
@@ -35,7 +35,7 @@
     (when (and (< pos (length sorted-array))
 	       (= (elt sorted-array pos) element))
       pos)))
-(define-rosalind-problem :bins rosalind-binary-search
+(define-rosalind-problem :bins
   "binary search"
   (let* ((lines (read-file-lines input-filename))
 	 (sorted-array (coerce (parse-integer-list (third lines)) 'vector))
@@ -59,7 +59,7 @@
 	      (destructuring-bind-integers (source-value target-value) line
 		(add-edge graph (elt nodes source-value) (elt nodes target-value))))))
     graph))
-(define-rosalind-problem :deg degree-array
+(define-rosalind-problem :deg
   "degree array"
   (let ((graph (make-graph-from-file input-filename)))
     (let ((degree-data
@@ -69,7 +69,7 @@
 	(print-integer-list
 	 (mapcar #'cdr (sort degree-data #'< :key #'car)) stream)))))
 
-(define-rosalind-problem :ddeg double-degree-array
+(define-rosalind-problem :ddeg
   "double-degree array"
   (let* ((graph (make-graph-from-file input-filename)))
     (let ((double-degree-data
@@ -100,7 +100,7 @@
 	     (collect (alexandria:if-let ((distance (gethash node nodes-distances)))
 			distance
 			-1)))))))
-(define-rosalind-problem :bfs breadth-first-search
+(define-rosalind-problem :bfs
   "breadth first search"
   (let* ((graph (make-graph-from-file input-filename :directed)))
     (with-output-to-file (stream)
@@ -117,12 +117,12 @@
     (if (> (gethash int-with-max-count counts) (/ list-length 2))
 	int-with-max-count
 	-1)))
-(define-rosalind-problem :maj ros-majority-element
+(define-rosalind-problem :maj
   "majority element"
   (iter (for line in (rest (read-file-lines input-filename)))
 	(collect (majority-element (parse-integer-list line)))))
 
-(define-rosalind-problem :mer ros-merge-sorted
+(define-rosalind-problem :mer
   "merge sorted arrays"
   (let* ((lines (read-file-lines input-filename))
 	 (list-1 (parse-integer-list (second lines)))
@@ -135,7 +135,7 @@
 			  ((< (car list-1) (car list-2)) (collect (pop list-1)))
 			  (t (collect (pop list-2)))))))))
 
-(define-rosalind-problem :2sum ros-2sum
+(define-rosalind-problem :2sum
   "2sum"
   (let* ((lines (read-file-lines input-filename)))
     (with-output-to-file (stream)
@@ -159,7 +159,7 @@
 (defun merge-sort (data)
   ;; cheating...
   (sort data #'<))
-(define-rosalind-problem :ms ros-merge-sort
+(define-rosalind-problem :ms
   "merge sort"
   (with-input-lines (lines)
    (with-output-to-file (stream)     
@@ -183,7 +183,7 @@
 			    (push (coerce (nreverse result) 'string) all-results)))
 			(push (elt (dna-codon-to-amino-acid codon) 0) result))))))
     all-results))
-(define-rosalind-problem :orf ros-open-reading-frames
+(define-rosalind-problem :orf
   "open reading frames"
   (with-single-fasta-line (dna-string)
     (let ((proteins (make-hash-table :test #'equal)))
@@ -226,7 +226,7 @@
        (iter (for i from (1- L) downto 0)
 	     (collect (aref x k))
 	     (setf k (aref p k)))))))
-(define-rosalind-problem :lgis ros-longest-increasing-subseq
+(define-rosalind-problem :lgis
   "longest increasing subsequence"
   (with-input-lines (lines)
     (let* ((permutation (coerce (parse-integer-list (second lines)) 'vector)))
@@ -259,13 +259,13 @@
 		  (remove-element unprocessed-nodes reached-node)))
 	    (incf connected-components)))
     connected-components))
-(define-rosalind-problem :cc ros-connected-components
+(define-rosalind-problem :cc
   "connected components"
   (let ((graph (make-graph-from-file input-filename)))
     (with-output-to-file (stream)
       (format stream "~a~%" (count-connected-components graph)))))
 
-(define-rosalind-problem :pmch ros-perfect-matchings
+(define-rosalind-problem :pmch
   "Perfect matchings and RNA secondary structures"
   (with-single-fasta-line (rna)
     (* (fact (count #\A rna)) (fact (count #\G rna)))))
@@ -284,7 +284,7 @@
 		     (setf idx (parent-idx idx)))))
       (iter (for idx index-of-vector data from 1)
 	    (bubble-up idx)))))
-(define-rosalind-problem :hea ros-build-heap
+(define-rosalind-problem :hea
   "building a heap"
   (with-input-lines (lines)
     (let ((data (parse-integer-vector (second lines))))
@@ -310,7 +310,7 @@
 	      (assert (funcall pred (element idx) (element store-index))))	
 	(iter (for idx index-of-vector data from (1+ store-index))
 	      (assert (not (funcall pred (element idx) (element store-index)))))))))
-(define-rosalind-problem :par ros-partition
+(define-rosalind-problem :par
   "2-way partition"
   (with-input-lines (lines)
     (let ((data (parse-integer-vector (second lines))))
@@ -318,7 +318,7 @@
       (with-output-to-file (s)
 	(print-integer-vector data s)))))
 
-(define-rosalind-problem :tree ros-complete-tree
+(define-rosalind-problem :tree
   "completing a tree"
   (let ((graph (make-graph-from-file input-filename)))
     (with-output-to-file (s)

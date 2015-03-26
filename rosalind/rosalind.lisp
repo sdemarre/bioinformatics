@@ -2,13 +2,14 @@
 
 (defparameter *rosalind-id-info* (make-hash-table))
 
-(defmacro define-rosalind-problem (rosalind-id function-name &body body)
-  `(let ((input-filename ,(make-input-filename rosalind-id))
-	 (output-filename ,(make-output-filename rosalind-id)))
-     (declare (ignorable output-filename))
-     (setf (gethash ,rosalind-id *rosalind-id-info*) ',function-name)
-     (defun ,function-name ()
-       ,@body)))
+(defmacro define-rosalind-problem (rosalind-id &body body)
+  (let ((function-name (read-from-string (make-rosalind-function-name rosalind-id))))
+    `(let ((input-filename ,(make-input-filename rosalind-id))
+	   (output-filename ,(make-output-filename rosalind-id)))
+       (declare (ignorable output-filename))
+       (setf (gethash ,rosalind-id *rosalind-id-info*) ',function-name)
+       (defun ,function-name ()
+	 ,@body))))
 
 (defun rosalind-run (rosalind-id)
   (let ((problem-info (gethash rosalind-id *rosalind-id-info*)))
@@ -30,6 +31,8 @@
   (format nil "rosalind/data/rosalind_~a.txt" (string-downcase (symbol-name problem-id))))
 (defun make-output-filename (problem-id)
   (format nil "rosalind/output/rosalind_~a_output.txt" (string-downcase (symbol-name problem-id))))
+(defun make-rosalind-function-name (problem-id)
+  (format nil "problem-~a-fun" (string-downcase (symbol-name problem-id))))
 
 (defmacro with-output-to-file ((stream-name) &body body)
   `(with-open-file (,stream-name output-filename :direction :output :if-exists :supersede)
@@ -70,4 +73,4 @@
      ,@(iter (for form on body)
 	 (collect (car form))
 	 (unless (null (cdr form))
-	   (collect between-form))))))
+	   (collect between-form)))))
