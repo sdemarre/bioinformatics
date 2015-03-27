@@ -319,7 +319,7 @@
 			      (when (has-common-substr-at dna-string-1 0 substr-len dna-string-2 dna-string-2-pos)
 				(add-prefix-relation dna-string-1 dna-string-2 from-idx to-idx substr-len dna-string-2-pos)
 				(return))))))))
-	assembly-graph))))
+	assembly-graph)))
 
 (defun apply-signs (list p)
   "uses the bits of p to decide when to change the sign of elements in list"
