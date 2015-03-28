@@ -290,7 +290,7 @@
        (with-output-to-file (stream)
 	 (print-float-list log-probs stream))))))
 
-(define-rosalind-problem :long
+(define-rosalind-problem :long-wrong
   "genome assembly as shortest superstring"
   (with-fasta-dna-lines (dna-strings)
     (let ((assembly-graph (make-instance 'graph :type :directed))
@@ -319,7 +319,23 @@
 			      (when (has-common-substr-at dna-string-1 0 substr-len dna-string-2 dna-string-2-pos)
 				(add-prefix-relation dna-string-1 dna-string-2 from-idx to-idx substr-len dna-string-2-pos)
 				(return))))))))
-	assembly-graph)))
+      assembly-graph)))
+
+(define-rosalind-problem :long
+  "genome assembly as shortest superstring"
+  (let ((best-prefix-match (make-hash-table :test #'equal)))
+    (with-fasta-dna-lines (dna-strings)
+      (iter (for dna-string-1 in dna-strings)
+	    (for idx1 from 1)
+	    (iter (for dna-string-2 in dna-strings)
+		  (for idx2 from 1)
+		  (unless (eq dna-string-1 dna-string-2)
+		    (iter (for substr-len from (length dna-string-1) downto (floor (length dna-string-1) 2))
+			  (for dna-string-2-pos from 0)
+			  (when (has-common-substr-at dna-string-1 0 substr-len dna-string-2 dna-string-2-pos)
+			    (setf (gethash dna-string-1 best-prefix-match) (list dna-string-2 idx2 idx1 dna-string-2-pos))
+			    (return)))))))
+    best-prefix-match))
 
 (defun apply-signs (list p)
   "uses the bits of p to decide when to change the sign of elements in list"
