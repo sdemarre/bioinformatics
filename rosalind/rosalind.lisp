@@ -62,6 +62,13 @@
        (let ((,dna-strings-var-name (mapcar #'second ,fasta-data)))
 	 ,@body))))
 
+(defun problem-lines (problem-id)
+  (read-file-lines (make-input-filename problem-id)))
+(defun problem-fasta-lines (problem-id)
+  (read-fasta-lines (make-input-filename problem-id)))
+(defun problem-fasta-dna (problem-id)
+  (mapcar #'second (problem-fasta-lines problem-id)))
+
 (defun rosalind-run-all ()
   (let ((problem-ids  (mapcar #'car (list-solved-rosalind-problems))))
     (iter (for id in problem-ids)

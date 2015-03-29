@@ -318,7 +318,14 @@ returns a list of positions in the genome where kmer was found."
 		    (if (zerop (random 2)) #\C #\G))))
     result))
 
-(defun make-random-substrings (dna-string count length-or-fun)
-  (iter (repeat count)
-	(let ((length (if (numberp length-or-fun) length-or-fun (funcall length-or-fun))))
-	  (collect (subseq-of-length dna-string (random (- (length dna-string) length)) length)))))
+(defun make-random-substrings (dna-string count length-or-fun &optional print)
+  (when print
+    (format t "~a~%" dna-string))
+  (flet ((dots (n) (iter (repeat n) (collect #\.))))
+   (iter (repeat count)
+	 (let* ((length (if (numberp length-or-fun) length-or-fun (funcall length-or-fun)))
+		(pos  (random (- (length dna-string) length)))
+		(substr (subseq-of-length dna-string pos length)))
+	   (when print
+	     (format t "~{~a~}~a~{~a~}~%" (dots pos) substr (dots (- (length dna-string) pos (length substr)))))
+	   (collect substr)))))

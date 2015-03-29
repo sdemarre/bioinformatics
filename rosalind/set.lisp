@@ -77,3 +77,13 @@
   (iter (for (key value) in-hashtable (elements this))
 	(declare (ignorable value))
 	(return key)))
+
+(defun make-full-integer-set (max-element &optional (min-element 1))
+  (with-new-set result
+    (iter (for el from min-element to max-element)
+	  (add-element result el))))
+
+(defun make-set-from-list (list)
+  (with-new-set result
+    (iter (for el in list)
+	  (add-element result el))))
