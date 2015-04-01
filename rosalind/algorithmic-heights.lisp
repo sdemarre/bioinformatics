@@ -17,9 +17,9 @@
 	 (unsorted-data (parse-integer-list data)))
     (count-insertion-sort-swaps (coerce unsorted-data 'vector))))
 
-(defun binary-search (sequence compare)
-  (let* ((first 0)
-	 (last (length sequence))
+(defun binary-search (sequence compare &optional (begin 0) (end (length sequence)))
+  (let* ((first begin)
+	 (last end)
 	 (count (- last first)))
     (iter (while (> count 0))
 	  (let* ((count2 (floor count 2))
@@ -334,3 +334,20 @@
 	     (iter (for graph-lines in (rest line-groups))
 		   (collect (if (is-bipartite-p (make-graph-from-lines graph-lines)) 1 -1)))))
        (print-integer-list bipartite-info s)))))
+
+(defun find-3sum-positions (line)
+  (let* ((elements (iter (for index from 1)
+			 (for value in (parse-integer-list line))
+			 (collect (cons value index))))
+	 (sorted-elements (coerce (sort elements #'<= :key #'car) 'vector)))
+    (iter (for i index-of-vector sorted-elements)
+	  (for i-value = (elt sorted-elements i))
+	  (iter (for j index-of-vector sorted-elements from (1+ i))
+		(for j-value = (elt sorted-elements j))
+		(let ((find-element (binary-search sorted-elements #'(lambda (e) (<= (car e) ()))))))))))
+(define-rosalind-problem :3sum
+  "3sum"
+  (with-input-lines (lines)
+    (with-output-to-file (s)
+      (iter (for line in (rest lines))
+	    (print-integer-list (find-3sum-positions line) s)))))
