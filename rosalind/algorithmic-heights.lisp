@@ -47,9 +47,8 @@
 		      	       (if pos (1+ pos) -1))))
 	      stream))))
 
-(defun make-graph-from-file (filename &optional (type :undirected))
-  (let* ((lines (read-file-lines filename))
-	 (graph (make-instance 'graph :type type)))
+(defun make-graph-from-lines (lines &optional (type :undirected))
+  (let ((graph (make-instance 'graph :type type)))
     (destructuring-bind-integers (count-nodes &optional count-edges) (first lines)
       (declare (ignorable count-edges))
       (let ((nodes (make-array (1+ count-nodes))))
@@ -59,6 +58,9 @@
 	      (destructuring-bind-integers (source-value target-value) line
 		(add-edge graph (elt nodes source-value) (elt nodes target-value))))))
     graph))
+(defun make-graph-from-file (filename &optional (type :undirected))
+  (let* ((lines (read-file-lines filename)))
+    (make-graph-from-lines lines type)))
 (define-rosalind-problem :deg
   "degree array"
   (let ((graph (make-graph-from-file input-filename)))
@@ -323,3 +325,12 @@
   (let ((graph (make-graph-from-file input-filename)))
     (with-output-to-file (s)
       (format s "~a~%" (1- (count-connected-components graph))))))
+
+(define-rosalind-problem :bip
+  "testing bipartiteness"
+  (with-input-groups (line-groups)
+    (with-output-to-file (s)
+      (let ((bipartite-info
+	     (iter (for graph-lines in (rest line-groups))
+		   (collect (if (is-bipartite-p (make-graph-from-lines graph-lines)) 1 -1)))))
+       (print-integer-list bipartite-info s)))))

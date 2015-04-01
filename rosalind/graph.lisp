@@ -1,7 +1,7 @@
 (in-package :bioinformatics)
 
 (defclass graph ()
-  ((nodes :reader node :initform (make-array 10 :adjustable t :fill-pointer 0))
+  ((nodes :reader nodes :initform (make-array 10 :adjustable t :fill-pointer 0))
    (edges :reader edges :initform (make-array 10 :adjustable t :fill-pointer 0))
    (type :reader graph-type :initarg :type :initform :undirected)
    (adjacency-list :initform (make-hash-table))))
@@ -16,6 +16,8 @@
   (second (multiple-value-list (gethash (slot-value this 'properties) symbol))))
 (defmethod list-properties ((this property-mixin))
   (alexandria:hash-table-keys (slot-value this 'properties)))
+(defmethod remove-property ((this property-mixin) symbol)
+  (remhash symbol (slot-value this 'properties)))
 (defclass node (property-mixin)
   ((value :accessor value :initarg :value)
    (graph :reader graph :initarg :graph)))
@@ -86,3 +88,47 @@
 	  (setf (gethash (value node) result) node))
     result))
 
+
+(defun initialize-property (graph property value)
+  (iter (for node node-of-graph graph)
+	(set-property node property value)))
+(defun clear-property (graph property)
+  (iter (for node node-of-graph graph)
+	(remove-property node property)))
+(defun traverse-nodes-depth-first (initial-node fun &optional loop-fun)
+  "traverses nodes, depth first, with loop checking. 
+calls (fun node parent-node) for every node visited.
+optionally calls (loop-fun node parent-node) when a loop was detected."
+  (with-temp-nodes-property ((graph initial-node) visited nil)
+    (labels ((node-visited-p (node) (get-property node visited))
+	     (visit-node (node) (set-property node visited t))
+	     (traverse (node &optional parent)
+	       (if (node-visited-p node)
+		   (when loop-fun
+		     (funcall loop-fun node parent))
+		   (progn
+		     (funcall fun node parent)
+		     (visit-node node)
+		     (iter (for neighbour neighbour-of-node node)
+			   (unless (eq neighbour parent)
+			    (traverse neighbour node)))))))
+      (traverse initial-node))))
+
+(defun is-bipartite-p (graph)
+  (with-temp-nodes-property (graph color nil)
+    (let (conflicting-node-found)
+      (flet ((set-color (node color-name) (set-property node color color-name))
+	     (get-color (node) (get-property node color))
+	     (other-color (color) (case color
+				    (:red :blue)
+				    (:blue :red))))
+	(iter (for node node-of-graph graph)
+	      (if conflicting-node-found (return))
+	      (unless (get-color node)
+		(set-color node :red)
+		(traverse-nodes-depth-first node
+					    #'(lambda (node parent) (when parent
+								      (set-color node (other-color (get-color parent)))))
+					    #'(lambda (node parent) (when (eq (get-color node) (get-color parent))
+								      (setf conflicting-node-found t)))))))
+      (not conflicting-node-found))))

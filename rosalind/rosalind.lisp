@@ -47,6 +47,11 @@
    `(with-input-lines (,gslines)
       (let ((,line-var-name (first ,gslines)))
 	,@body))))
+(defmacro with-input-groups ((groups-var-name) &body body)
+  (let ((lines (gensym)))
+    `(with-input-lines (,lines)
+       (let ((,groups-var-name (split-lines-into-groups ,lines)))
+	 ,@body))))
 
 (defmacro with-fasta-input-lines ((fasta-lines-var-name) &body body)
   `(let ((,fasta-lines-var-name (read-fasta-lines input-filename)))
@@ -81,3 +86,18 @@
 	 (collect (car form))
 	 (unless (null (cdr form))
 	   (collect between-form)))))
+
+
+(defun split-lines-into-groups (lines)
+  "splits lines into groups of lines, separated by empty lines"
+  (let (temp-group
+	result)
+   (iter (for line in lines)
+	 (if (string= "" line)
+	     (progn
+	       (push (nreverse temp-group) result)
+	       (setf temp-group nil))
+	     (push line temp-group)))
+   (unless (null temp-group)
+     (push (nreverse temp-group) result))
+   (nreverse result)))
