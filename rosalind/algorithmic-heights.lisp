@@ -17,23 +17,26 @@
 	 (unsorted-data (parse-integer-list data)))
     (count-insertion-sort-swaps (coerce unsorted-data 'vector))))
 
-(defun binary-search (sequence compare &optional (begin 0) (end (length sequence)))
+(defun binary-search (sequence order begin end)
   (let* ((first begin)
 	 (last end)
 	 (count (- last first)))
     (iter (while (> count 0))
 	  (let* ((count2 (floor count 2))
 		 (mid (+ first count2)))
-	    (if (funcall compare (elt sequence mid))
+	    (if (funcall order (elt sequence mid))
 		(progn
 		  (setf first (incf mid))
 		  (decf count (1+ count2)))
 		(setf count count2))))
     first))
-(defun position-binary-search (element sorted-array compare)
-  (let ((pos (binary-search sorted-array #'(lambda (e) (funcall compare e element)))))
+(defun position-binary-search (element sorted-array order &key (test #'equal) (key #'identity) (begin 0) (end (length sorted-array)))
+  "returns the position of element in sorted-array, which is sorted according to order, or nil if not found.
+test checks if 2 elements are identical, after applying <key>.
+searches through range [begin, end)"
+  (let ((pos (binary-search sorted-array #'(lambda (e) (funcall order (funcall key e) element)) begin end)))
     (when (and (< pos (length sorted-array))
-	       (= (elt sorted-array pos) element))
+	       (funcall test (funcall key (elt sorted-array pos)) element))
       pos)))
 (define-rosalind-problem :bins
   "binary search"
@@ -339,12 +342,22 @@
   (let* ((elements (iter (for index from 1)
 			 (for value in (parse-integer-list line))
 			 (collect (cons value index))))
-	 (sorted-elements (coerce (sort elements #'<= :key #'car) 'vector)))
-    (iter (for i index-of-vector sorted-elements)
-	  (for i-value = (elt sorted-elements i))
-	  (iter (for j index-of-vector sorted-elements from (1+ i))
-		(for j-value = (elt sorted-elements j))
-		(let ((find-element (binary-search sorted-elements #'(lambda (e) (<= (car e) ()))))))))))
+	 (sorted-elements (coerce (sort elements #'<= :key #'car) 'vector))
+	 result)
+    (iter (for i from 0 to (- (length sorted-elements) 3))
+	  (for i-value = (car (elt sorted-elements i)))
+	  (until result)
+	  (iter (for j from (1+ i) to (- (length sorted-elements) 2))
+		(for j-value = (car (elt sorted-elements j)))
+		(let* ((value (- 0 i-value j-value))
+		       (position (position-binary-search value sorted-elements #'< :key #'car :begin (1+ j))))
+		  (when position
+		    (return (setf result (list (cdr (elt sorted-elements i))
+					       (cdr (elt sorted-elements j))
+					       (cdr (elt sorted-elements position)))))))))
+    (if result
+	(sort result #'<)
+	(list -1))))
 (define-rosalind-problem :3sum
   "3sum"
   (with-input-lines (lines)
