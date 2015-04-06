@@ -388,3 +388,34 @@ searches through range [begin, end)"
     (with-output-to-file (s)
       (iter (for line in (rest lines))
 	    (print-integer-list (find-3sum-positions-fast line) s)))))
+
+(define-rosalind-problem :dag
+  "testing acyclicity"
+  (with-input-groups (input-data)
+    (with-output-to-file (s)
+      (print-integer-list
+       (iter (for graph-data in (rest input-data))
+	     (if (is-directed-acyclic-graph-p (make-graph-from-lines graph-data :directed))
+		 (collect 1)
+		 (collect -1)))
+       s))))
+
+(define-rosalind-problem :ts
+  "topological sort"
+  (with-input-lines (lines)
+    (with-output-to-file (s)
+      (print-integer-list
+       (mapcar #'value (topological-sort (make-graph-from-lines lines :directed)))
+       s))))
+
+(define-rosalind-problem :hdag
+  "hamiltonian path in DAG"
+  (with-input-groups (input-data)
+    (with-output-to-file (s)
+      (iter (for graph-data in (rest input-data))
+	    (for graph = (make-graph-from-lines graph-data :directed))
+	    (for topo-sort = (topological-sort graph))
+	    (for count-components = (count-connected-components graph))
+	    (if (= count-components (length (nodes graph)))
+		(print-integer-list (mapcar #'value topo-sort) s)
+		(format s "-1~%"))))))

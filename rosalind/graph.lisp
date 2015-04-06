@@ -4,7 +4,8 @@
   ((nodes :reader nodes :initform (make-array 10 :adjustable t :fill-pointer 0))
    (edges :reader edges :initform (make-array 10 :adjustable t :fill-pointer 0))
    (type :reader graph-type :initarg :type :initform :undirected)
-   (adjacency-list :initform (make-hash-table))))
+   (adjacency-list :initform (make-hash-table))
+   (inverted-adjacency-list)))
 
 (defclass property-mixin ()
   ((properties :initform (make-hash-table))))
@@ -34,16 +35,23 @@
 (defmethod add-edge ((this graph) (source node) (target node))
   (vector-push-extend (make-instance 'edge :source source :target target :graph this) (slot-value this 'edges))
   (macrolet ((get-adjacency-list (s)
-	       `(gethash ,s (slot-value this 'adjacency-list))))
+	       `(gethash ,s (slot-value this 'adjacency-list)))
+	     (get-inv-adjacency-list (s)
+	       `(gethash ,s (slot-value this 'inverted-adjacency-list))))
     (symbol-macrolet ((source-adjacency-list (get-adjacency-list source))
-		      (target-adjacency-list (get-adjacency-list target)))
+		      (target-adjacency-list (get-adjacency-list target))
+		      (target-inv-adjacency-list (get-inv-adjacency-list target)))
       (unless source-adjacency-list
 	(setf source-adjacency-list (make-array 10 :adjustable t :fill-pointer 0)))
       (vector-push-extend target source-adjacency-list)
-      (when (eq :undirected (graph-type this))
-	(unless target-adjacency-list
-	  (setf target-adjacency-list (make-array 10 :adjustable t :fill-pointer 0)))
-	(vector-push-extend source target-adjacency-list)))))
+      (cond ((eq :undirected (graph-type this))
+	     (unless target-adjacency-list
+	       (setf target-adjacency-list (make-array 10 :adjustable t :fill-pointer 0)))
+	     (vector-push-extend source target-adjacency-list))
+	    ((eq :directed (graph-type this))
+	     (unless target-inv-adjacency-list
+	       (setf target-inv-adjacency-list (make-array 10 :adjustable t :fill-pointer 0)))
+	     (vector-push-extend source target-inv-adjacency-list))))))
 
 (defmethod count-nodes ((this graph))
   (length (slot-value this 'nodes)))
@@ -57,6 +65,10 @@
 
 (defmethod degree ((this node))
   (length (gethash this (slot-value (graph this) 'adjacency-list))))
+(defmethod inverted-degree ((this node))
+  (alexandria:if-let ((inv-adjacency (gethash this (slot-value (graph this) 'inverted-adjacency-list))))
+    (length inv-adjacency)
+    0))
 
 (iter:defmacro-clause (for var node-of-graph g)
   "All nodes of graph"
@@ -132,3 +144,56 @@ optionally calls (loop-fun node parent-node) when a loop was detected."
 					    #'(lambda (node parent) (when (eq (get-color node) (get-color parent))
 								      (setf conflicting-node-found t)))))))
       (not conflicting-node-found))))
+
+(defun has-loop-starting-from-node-p (node)
+  (let ((count 0)
+	loop-found)
+    (traverse-nodes-depth-first
+     node
+     #'(lambda (node parent) (declare (ignorable node parent)) (incf count))
+     #'(lambda (node parent) (declare (ignorable node parent)) (setf loop-found t)))
+    (values loop-found count)))
+(defun find-root-nodes (graph)
+  (with-temp-nodes-property (graph reachable nil is-reachable-p set-reached)
+    (iter (for node node-of-graph graph)
+	  (iter (for neighbour neighbour-of-node node)
+		(set-reached neighbour t)))
+    (iter (for node node-of-graph graph)
+	  (unless (is-reachable-p node)
+	    (collect node)))))
+(defun topological-sort (graph)
+  (let (topo-sort)
+    (with-temp-nodes-binary-property (graph temporary-mark nil)
+      (with-temp-nodes-binary-property (graph permanent-mark nil)
+	(labels ((visit (node)
+		   (let ((*indent* (format nil "  ~a" *indent*)))
+		     ;; (format t "~avisiting ~a[t=~a,p=~a]~%" *indent* (value node) (has-temporary-mark node) (has-permanent-mark node))
+		     (unless (has-temporary-mark node)
+		       (if (has-permanent-mark node)
+			   t
+			   (prog2
+			       (set-temporary-mark node)
+			       (iter (for neighbour neighbour-of-node node)
+				     (always (visit neighbour)))
+			     (clear-temporary-mark node)
+			     (set-permanent-mark node)
+			     (push node topo-sort)))))))
+	  (when
+	      (iter (for node node-of-graph graph)
+		    ;; (format t "~achecking ~a[t=~a,p=~a]~%" *indent* (value node) (has-temporary-mark node) (has-permanent-mark node))
+		    (unless (has-permanent-mark node)
+		      (always (visit node))))
+	    topo-sort))))))
+(defun is-directed-acyclic-graph-p (graph)
+  (= (length (topological-sort graph)) (length (nodes graph))))
+
+
+(defmethod save-to-dotfile ((graph graph) dot-filename)
+  (with-open-file (s dot-filename :direction :output :if-exists :supersede)
+    (let ((link (if (eq :directed (graph-type graph)) " -> " " -- "))
+	  (type (if (eq :directed (graph-type graph)) "digraph" "graph")))
+      (format s "~a name {~%" type)
+      (iter (for edge edge-of-graph graph)
+	    (format s "  n~a ~a n~a~%" (value (head edge)) link (value (target edge))))
+      (format s "}~%")
+      dot-filename)))

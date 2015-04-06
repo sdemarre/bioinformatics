@@ -2,7 +2,7 @@
 
 (defun maybe-trim-eol (line)
   "depending on the platform and the git config, we might or might not have ^M at end of line, so check and remove if needed."
-  (if (char= #\Return (elt line (1- (length line))))
+  (if (and (> (length line) 0) (char= #\Return (elt line (1- (length line)))))
       (subseq line 0 (1- (length line)))
       line))
 
