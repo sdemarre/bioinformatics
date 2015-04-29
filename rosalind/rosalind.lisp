@@ -1,21 +1,32 @@
 (in-package :bioinformatics)
 
 (defparameter *rosalind-id-info* (make-hash-table))
-
-(defmacro define-rosalind-problem (rosalind-id &body body)
+(defparameter *rosalind-id* nil)
+(defparameter *input-filename* nil)
+(defparameter *output-filename* nil)
+(defmacro define-rosalind-problem (rosalind-id docstring &body body)
   (let ((function-name (read-from-string (make-rosalind-function-name rosalind-id))))
-    `(let ((input-filename ,(make-input-filename rosalind-id))
-	   (output-filename ,(make-output-filename rosalind-id)))
-       (declare (ignorable output-filename))
+    `(progn
        (setf (gethash ,rosalind-id *rosalind-id-info*) ',function-name)
        (defun ,function-name ()
-	 ,@body))))
+	 ,docstring
+	 (let ((*input-filename* ,(make-input-filename rosalind-id))
+	       (*output-filename* ,(make-output-filename rosalind-id))
+	       (*rosalind-id* ,rosalind-id))
+	   (rosalind-maybe-get-dataset-from-website)
+	   (prog1
+	       ,@body
+	     (rosalind-maybe-submit-solution-to-website)))))))
 
 (defun rosalind-run (rosalind-id)
   (let ((problem-info (gethash rosalind-id *rosalind-id-info*)))
     (if problem-info 
 	(funcall problem-info)
 	(error "You didn't solve this problem yet (~a)" rosalind-id))))
+
+(defun rosalind-run-from-web (rosalind-id)
+  (let ((*rosalind-use-website* t))
+    (rosalind-run rosalind-id)))
 
 (defun rosalind-find-function (rosalind-id)
   (let ((problem-info (gethash rosalind-id *rosalind-id-info*)))
@@ -35,12 +46,12 @@
   (format nil "problem-~a-fun" (string-downcase (symbol-name problem-id))))
 
 (defmacro with-output-to-file ((stream-name) &body body)
-  `(with-open-file (,stream-name output-filename :direction :output :if-exists :supersede)
+  `(with-open-file (,stream-name *output-filename* :direction :output :if-exists :supersede)
      ,@body
-     output-filename))
+     *output-filename*))
 
 (defmacro with-input-lines ((lines-var-name) &body body)
-  `(let ((,lines-var-name (read-file-lines input-filename)))
+  `(let ((,lines-var-name (read-file-lines *input-filename*)))
      ,@body))
 (defmacro with-single-input-line ((line-var-name) &body body)
   (let ((gslines (gensym)))
@@ -54,7 +65,7 @@
 	 ,@body))))
 
 (defmacro with-fasta-input-lines ((fasta-lines-var-name) &body body)
-  `(let ((,fasta-lines-var-name (read-fasta-lines input-filename)))
+  `(let ((,fasta-lines-var-name (read-fasta-lines *input-filename*)))
      ,@body))
 (defmacro with-single-fasta-line ((fasta-line-var-name) &body body)
   (let ((flines (gensym)))

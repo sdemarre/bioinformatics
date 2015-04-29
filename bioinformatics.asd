@@ -10,6 +10,8 @@
 	       (:file "utils")
                (:file "bioinformatics")
 	       (:file "rosalind/rosalind")
+	       (:file "rosalind/webtools-macros")
+	       (:file "rosalind/webtools")
 	       (:file "rosalind/set")
 	       (:file "rosalind/graph-macros")
 	       (:file "rosalind/graph")

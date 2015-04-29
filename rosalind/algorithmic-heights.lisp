@@ -1,5 +1,10 @@
 (in-package :bioinformatics)
 
+(define-rosalind-problem :fibo
+    "fibonacci numbers"
+  (with-single-input-line (line)
+    (with-output-to-file (s)
+      (format s "~a~%" (fib (parse-integer line))))))
 (defun count-insertion-sort-swaps (data)
   (let ((swaps-count 0))
     (iter (for i from 1 to (1- (length data)))
