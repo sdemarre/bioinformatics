@@ -4,15 +4,17 @@
   "strings and lists"
   (with-input-lines (lines)
     (destructuring-bind-integers (start1 end1 start2 end2) (second lines)
-      (format nil "~a ~a" (subseq (first lines) start1 (1+ end1)) (subseq (first lines) start2 (1+ end2))))))
+      (with-output-to-file (s)
+	  (format s "~a ~a" (subseq (first lines) start1 (1+ end1)) (subseq (first lines) start2 (1+ end2)))))))
 
 (define-rosalind-problem :ini4
   "conditions and loops"
   (with-input-lines (lines)
     (destructuring-bind-integers (a b) (first lines)
-      (iter (for i from a to b)
-	    (when (oddp i)
-	      (summing i))))))
+      (write-single-output-line
+	(iter (for i from a to b)
+	      (when (oddp i)
+		(summing i)))))))
 
 (define-rosalind-problem :ini5
   "working with files"

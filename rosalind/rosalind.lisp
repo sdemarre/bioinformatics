@@ -4,6 +4,7 @@
 (defparameter *rosalind-id* nil)
 (defparameter *input-filename* nil)
 (defparameter *output-filename* nil)
+(defparameter *rosalind-show-output* nil)
 (defmacro define-rosalind-problem (rosalind-id docstring &body body)
   (let ((function-name (read-from-string (make-rosalind-function-name rosalind-id))))
     `(progn
@@ -16,7 +17,12 @@
 	   (rosalind-maybe-get-dataset-from-website)
 	   (prog1
 	       ,@body
-	     (rosalind-maybe-submit-solution-to-website)))))))
+	     (rosalind-maybe-submit-solution-to-website)
+	     (maybe-show-output-file)))))))
+(defun maybe-show-output-file ()
+  (when *rosalind-show-output*
+    (iter (for line in-file *output-filename* using #'read-line)
+	  (format t "~a~%" line))))
 
 (defun rosalind-run (rosalind-id)
   (let ((problem-info (gethash rosalind-id *rosalind-id-info*)))
