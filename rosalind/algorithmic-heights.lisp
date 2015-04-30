@@ -45,16 +45,16 @@ searches through range [begin, end)"
 		    (not (funcall order element (funcall key (elt sorted-array pos))))))
       pos)))
 (define-rosalind-problem :bins
-  "binary search"
-  (let* ((lines (read-file-lines input-filename))
-	 (sorted-array (coerce (parse-integer-list (third lines)) 'vector))
-	 (elements-to-find (parse-integer-list (fourth lines))))
-    (with-output-to-file (stream)
-      (print-integer-list
-	      (iter (for element in elements-to-find)
-		    (collect (let ((pos (position-binary-search element sorted-array #'<)))
-		      	       (if pos (1+ pos) -1))))
-	      stream))))
+    "binary search"
+  (with-input-lines (lines)
+   (let* ((sorted-array (coerce (parse-integer-list (third lines)) 'vector))
+	  (elements-to-find (parse-integer-list (fourth lines))))
+     (with-output-to-file (stream)
+       (print-integer-list
+	(iter (for element in elements-to-find)
+	      (collect (let ((pos (position-binary-search element sorted-array #'<)))
+			 (if pos (1+ pos) -1))))
+	stream)))))
 
 (defun make-graph-from-lines (lines &optional (type :undirected))
   (let ((graph (make-instance 'graph :type type)))
@@ -72,7 +72,7 @@ searches through range [begin, end)"
     (make-graph-from-lines lines type)))
 (define-rosalind-problem :deg
   "degree array"
-  (let ((graph (make-graph-from-file input-filename)))
+  (let ((graph (make-graph-from-file *input-filename*)))
     (let ((degree-data
 	   (iter (for node node-of-graph graph)
 		 (collect (cons (value node) (degree node))))))
@@ -82,7 +82,7 @@ searches through range [begin, end)"
 
 (define-rosalind-problem :ddeg
   "double-degree array"
-  (let* ((graph (make-graph-from-file input-filename)))
+  (let* ((graph (make-graph-from-file *input-filename*)))
     (let ((double-degree-data
 	   (iter (for node node-of-graph graph)
 		 (collect (cons (value node)
@@ -113,7 +113,7 @@ searches through range [begin, end)"
 			-1)))))))
 (define-rosalind-problem :bfs
   "breadth first search"
-  (let* ((graph (make-graph-from-file input-filename :directed)))
+  (let* ((graph (make-graph-from-file *input-filename* :directed)))
     (with-output-to-file (stream)
       (print-integer-list (shortest-distances graph) stream))))
 
@@ -265,7 +265,7 @@ searches through range [begin, end)"
     connected-components))
 (define-rosalind-problem :cc
   "connected components"
-  (let ((graph (make-graph-from-file input-filename)))
+  (let ((graph (make-graph-from-file *input-filename*)))
     (with-output-to-file (stream)
       (format stream "~a~%" (count-connected-components graph)))))
 

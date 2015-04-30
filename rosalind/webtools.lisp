@@ -64,8 +64,10 @@
     (with-rosalind-session
       (let ((token (get-cookie-value *rosalind-cookies* "csrftoken"))
 	    (output-pathname (read-from-string (format nil "#P\"~a\"" *output-filename*))))
-       (drakma:http-request (rosalind-url (format nil "problems/~a" *rosalind-id*))
-			    :method :post
-			    :cookie-jar *rosalind-cookies*
-			    :parameters `(("csrfmiddlewaretoken" . ,token)
-					  ("output_file" . ,output-pathname)))))))
+	(handler-case
+	     (drakma:http-request (rosalind-url (format nil "problems/~a" *rosalind-id*))
+				  :method :post
+				  :cookie-jar *rosalind-cookies*
+				  :parameters `(("csrfmiddlewaretoken" . ,token)
+						("output_file" . ,output-pathname)))
+	  (drakma:parameter-error () "done!"))))))

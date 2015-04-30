@@ -1,24 +1,27 @@
 (in-package :bioinformatics)
 
 (define-rosalind-problem :dna
-  "counting dna nucleotides"
+    "counting dna nucleotides"
   (with-single-input-line (dna)
-   (let ((count-hash (make-hash-table)))
-     (iter (for letter in-vector dna)
-	   (incf (gethash letter count-hash 0)))
-     (format nil "~{~a ~}~%"
-	     (iter (for letter in-vector "ACGT")
-		   (collect (gethash letter count-hash)))))))
+    (let ((count-hash (make-hash-table)))
+      (iter (for letter in-vector dna)
+	    (incf (gethash letter count-hash 0)))
+      (with-output-to-file (s)
+	(format s "~{~a ~}~%"
+		(iter (for letter in-vector "ACGT")
+		      (collect (gethash letter count-hash))))))))
 
 (define-rosalind-problem :rna
   "transcribing dna into rna"
   (with-single-input-line (dna)
-    (cl-ppcre:regex-replace-all "T" dna "U")))
+    (with-output-to-file (s)
+      (format s "~a~%"(cl-ppcre:regex-replace-all "T" dna "U")))))
 
 (define-rosalind-problem :revc
   "complementing a strand of dna"
   (with-single-input-line (dna)
-    (reverse-complement dna)))
+    (with-output-to-file (s)
+      (format s "~a~%" (reverse-complement dna)))))
 
 (defun ros-fib (generations pairs-per-litter &optional (fnm2 1) (fnm1 1))
   (cond ((= generations 0) fnm1)
@@ -28,7 +31,8 @@
   "rabbits and recurrence relations"
   (with-single-input-line (problem-data)
     (destructuring-bind-integers  (generations pairs-per-litter) problem-data
-      (ros-fib generations pairs-per-litter))))
+      (with-output-to-file (s)
+	(format s "~a~%" (ros-fib generations pairs-per-litter))))))
 
 (defun gc-content (dna)
   (* 1.0 (/ (iter (for letter in-vector dna)
@@ -37,8 +41,11 @@
 (define-rosalind-problem :gc
   "computing gc content"
   (with-fasta-input-lines (lines)
-    (iter (for (name dna) in lines)
-	  (finding (list name (* 100 (gc-content dna))) maximizing (gc-content dna)))))
+    (destructuring-bind (label gc-content)
+	(iter (for (name dna) in lines)
+	      (finding (list name (* 100 (gc-content dna))) maximizing (gc-content dna)))
+      (with-output-to-file (s)
+	(format s "~a~%~a~%" label gc-content)))))
 
 (defun hamming-distance (dna1 dna2)
   (iter (for letter1 in-vector dna1)
@@ -49,7 +56,8 @@
   (with-input-lines (lines)
     (let* ((dna1 (first lines))
 	   (dna2 (second lines)))
-      (hamming-distance dna1 dna2))))
+      (with-output-to-file (s)
+	(format s "~a~%" (hamming-distance dna1 dna2))))))
 
 (defun rosalind-mendelian (homozygous-dominant-count heterozygous-count homozygous-recessive-count)
   (let ((k homozygous-dominant-count)
@@ -63,13 +71,14 @@
       (float (rosalind-mendelian homozygous-dominant-count heterozygous-count homozygous-recessive-count)))))
 
 (define-rosalind-problem :prot
-  "translating rna into protein"
+    "translating rna into protein"
   (with-input-lines (lines)
-    (coerce (mapcar #'(lambda (s) (if (= 1 (length s))
-				      (elt s 0)
-				      ""))
-		    (butlast (rna-to-protein (first lines))))
-	    'string)))
+    (with-output-to-file (s)
+      (format s "~a~%" (coerce (mapcar #'(lambda (s) (if (= 1 (length s))
+							 (elt s 0)
+							 ""))
+				       (butlast (rna-to-protein (first lines))))
+			       'string)))))
 
 (define-rosalind-problem :subs
   "finding a motif in dna"
@@ -93,7 +102,7 @@
 (define-rosalind-problem :cons
   "consensus and profile"
   (with-output-to-file (output)
-    (rosalind-consensus-and-profile-print output input-filename)))
+    (rosalind-consensus-and-profile-print output *input-filename*)))
 
 (defun print-generation (generation generation-counts)
   (format t "~a: ~{~a~^ ~}~%" generation (coerce generation-counts 'list)))
@@ -117,7 +126,8 @@
   "mortal fibonacci rabbits"
   (with-single-input-line (problem-data)
    (destructuring-bind-integers (generations pair-lifetime) problem-data
-     (mortal-rabits generations pair-lifetime))))
+     (with-output-to-file (s)
+       (format s "~a~%" (mortal-rabits generations pair-lifetime))))))
 
 (defun has-common-substr-at (dna-string-1 substr-start substr-length dna-string-2 position)
   (and (<= (+ substr-start substr-length) (length dna-string-1))
@@ -140,10 +150,13 @@
    (let* ((dna-strings (mapcar #'second fasta-lines))
 	  (sorted-dna-strings (sort dna-strings #'< :key #'length))
 	  (shortest-string (first sorted-dna-strings)))
-     (iter outer (for substr-length from (length shortest-string) downto 2)
-	   (iter (for position from 0 to (- (length shortest-string) substr-length))
-		 (when (all-have-common-substr shortest-string position substr-length (rest sorted-dna-strings))
-		   (return-from outer (subseq-of-length shortest-string position substr-length))))))))
+     (let ((shared-motif
+	    (iter outer (for substr-length from (length shortest-string) downto 2)
+	       (iter (for position from 0 to (- (length shortest-string) substr-length))
+		     (when (all-have-common-substr shortest-string position substr-length (rest sorted-dna-strings))
+		       (return-from outer (subseq-of-length shortest-string position substr-length)))))))
+      (with-output-to-file (s)
+	  (format s "~a~%" shared-motif))))))
 
 (defun list-permutations (list)
   (if (not (null list))
@@ -250,7 +263,8 @@
 			 (collect string))))
      (iter (for intron in introns)
 	   (setf dna (cl-ppcre:regex-replace-all intron dna "")))
-     (format nil "~{~a~}" (butlast (dna-to-protein dna))))))
+     (with-output-to-file (s)
+       (format s "~{~a~}" (butlast (dna-to-protein dna)))))))
 
 (defun get-uniprot-protein (protein-id)
   (second (car (get-uniprot-fasta-cached protein-id))))

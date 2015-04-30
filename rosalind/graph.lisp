@@ -5,7 +5,7 @@
    (edges :reader edges :initform (make-array 10 :adjustable t :fill-pointer 0))
    (type :reader graph-type :initarg :type :initform :undirected)
    (adjacency-list :initform (make-hash-table))
-   (inverted-adjacency-list)))
+   (inverted-adjacency-list :initform (make-hash-table))))
 
 (defclass property-mixin ()
   ((properties :initform (make-hash-table))))
@@ -161,6 +161,8 @@ optionally calls (loop-fun node parent-node) when a loop was detected."
     (iter (for node node-of-graph graph)
 	  (unless (is-reachable-p node)
 	    (collect node)))))
+
+(defparameter *indent* "")
 (defun topological-sort (graph)
   (let (topo-sort)
     (with-temp-nodes-binary-property (graph temporary-mark nil)
