@@ -143,6 +143,9 @@ returns a list of positions in the genome where kmer was found."
   "returns a list of (fasta-id string), as found in filename"
   (let ((lines (read-file-lines filename)))
     (fasta-combine-lines lines)))
+(defun write-fasta-data (stream fasta-data)
+  (iter (for (fasta-label fasta-prot) in fasta-data)
+	(format stream ">~a~%~a~%" fasta-label fasta-prot)))
 
 (defun profile-matrix (dna-strings)
   (let ((a-counts (make-array (length (first dna-strings)) :initial-element 0))
@@ -257,15 +260,18 @@ returns a list of positions in the genome where kmer was found."
 
 (defun get-uniprot-choice (location)
   "we got a 300 from uniprot, so get the first entry from there"
-  (break)
+  (format t "  ...uniprot.org access on 300 choice, treading even more carefully~%")
+  (sleep 4)
   (multiple-value-bind (fasta-string http-status info)
       (drakma:http-request (format nil "http://www.uniprot.org/~a" location))
     (declare (ignorable info))
     (if (= 200 http-status)
-	(first (fasta-combine-lines (split-sequence:split-sequence #\Newline fasta-string)))
+	(fasta-combine-lines (split-sequence:split-sequence #\Newline fasta-string))
 	(error "http get failed after choice (300), ~a" http-status))))
 (defun get-uniprot-fasta (uniprot-id)
-  "gets the fasta file that describes this protein from www.uniprot.org"
+  "gets the fasta file that describes this protein from www.uniprot.org"  
+  (format t "  uniprot.org access on for ~a, treading carefully~%" uniprot-id)
+  (sleep 2)
   (multiple-value-bind (fasta-string http-status info)
       (drakma:http-request (format nil "http://www.uniprot.org/uniprot/~a.fasta" uniprot-id))
     (declare (ignorable info))
@@ -276,13 +282,13 @@ returns a list of positions in the genome where kmer was found."
 	  (t (error "http get failed, ~a" http-status)))))
 (defun get-uniprot-fasta-cached (uniprot-id)
   "gets the fasta file that describes this protein from local cache or from www.uniprot.org"  
-  (let ((prot-filename (format nil "uniprot/~a" uniprot-id)))
+  (let ((prot-filename (format nil "uniprot/~a.fasta" uniprot-id)))
     (if (cl-fad:file-exists-p prot-filename)
 	(read-fasta-lines prot-filename)
 	(progn
 	  (with-open-file (fasta-output prot-filename :direction :output :if-exists :supersede)
 	    (let ((fasta-data  (get-uniprot-fasta uniprot-id)))
-	      (format fasta-output "~{~A~%~}" fasta-data)
+	      (write-fasta-data fasta-output fasta-data)
 	      fasta-data))))))
 
 (defun protein-motif-to-regexp (protein-motif)
