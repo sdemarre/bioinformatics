@@ -50,6 +50,13 @@
      ,@body
      *output-filename*))
 
+(defmacro write-single-output-line (&body body)
+  (let ((result (gensym))
+	(s (gensym)))
+    `(let ((,result (progn ,@body)))
+       (with-output-to-file (,s)
+	 (format ,s "~a~%" ,result)))))
+
 (defmacro with-input-lines ((lines-var-name) &body body)
   `(let ((,lines-var-name (read-file-lines *input-filename*)))
      ,@body))

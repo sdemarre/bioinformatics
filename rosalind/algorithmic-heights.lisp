@@ -3,8 +3,7 @@
 (define-rosalind-problem :fibo
     "fibonacci numbers"
   (with-single-input-line (line)
-    (with-output-to-file (s)
-      (format s "~a~%" (fib (parse-integer line))))))
+    (write-single-output-line (fib (parse-integer line)))))
 (defun count-insertion-sort-swaps (data)
   (let ((swaps-count 0))
     (iter (for i from 1 to (1- (length data)))
@@ -18,9 +17,11 @@
     swaps-count))
 (define-rosalind-problem :ins
   "insertion sort"
-  (let* ((data (second (read-file-lines input-filename)))
-	 (unsorted-data (parse-integer-list data)))
-    (count-insertion-sort-swaps (coerce unsorted-data 'vector))))
+  (with-input-lines (lines)
+    (let* ((data (second lines))
+	   (unsorted-data (parse-integer-list data)))
+      (write-single-output-line
+	(count-insertion-sort-swaps (coerce unsorted-data 'vector))))))
 
 (defun lower-bound (sequence begin end order element &key (key #'identity))
   (let* ((first begin)
@@ -130,41 +131,44 @@ searches through range [begin, end)"
 	-1)))
 (define-rosalind-problem :maj
   "majority element"
-  (iter (for line in (rest (read-file-lines input-filename)))
-	(collect (majority-element (parse-integer-list line)))))
+  (with-input-lines (lines)
+    (with-output-to-file (s)
+      (format s "~{~a~^ ~}~%"
+	      (iter (for line in (rest lines))
+		    (collect (majority-element (parse-integer-list line))))))))
 
 (define-rosalind-problem :mer
   "merge sorted arrays"
-  (let* ((lines (read-file-lines input-filename))
-	 (list-1 (parse-integer-list (second lines)))
-	 (list-2 (parse-integer-list (fourth lines))))
-    (with-output-to-file (stream)
-      (format stream "~{~a~^ ~}~%"
-	      (iter (until (and (null list-1) (null list-2)))
-		    (cond ((null list-1) (collect (pop list-2)))
-			  ((null list-2) (collect (pop list-1)))
-			  ((< (car list-1) (car list-2)) (collect (pop list-1)))
-			  (t (collect (pop list-2)))))))))
+  (with-input-lines (lines)
+    (let* ((list-1 (parse-integer-list (second lines)))
+	   (list-2 (parse-integer-list (fourth lines))))
+      (with-output-to-file (stream)
+	(format stream "~{~a~^ ~}~%"
+		(iter (until (and (null list-1) (null list-2)))
+		      (cond ((null list-1) (collect (pop list-2)))
+			    ((null list-2) (collect (pop list-1)))
+			    ((< (car list-1) (car list-2)) (collect (pop list-1)))
+			    (t (collect (pop list-2))))))))))
 
 (define-rosalind-problem :2sum
-  "2sum"
-  (let* ((lines (read-file-lines input-filename)))
+    "2sum"
+  (with-input-lines (lines)
     (with-output-to-file (stream)
-     (iter (for line in (rest lines))
-	   (for line-num from 1)
-	   (let ((labeled-list (iter (for i from 1)
-				     (for e in (parse-integer-list line))
-				     (collect (cons e i)))))
-	     (setf labeled-list (sort  labeled-list #'< :key #'(lambda (e) (abs (car e)))))
-	     (let (found)
-	       (iter (for e on labeled-list)
-		     (while (not found))
-		     (when (and (rest e)
-				(= (- (car (first e))) (car (second e))))
-		       (format stream "~a ~a~%" (cdr (first e)) (cdr (second e)))
-		       (setf found t)))
-	       (unless found
-		 (format stream "-1~%"))))))))
+      (iter (for line in (rest lines))
+	    (for line-num from 1)
+	    (let ((labeled-list (iter (for i from 1)
+				      (for e in (parse-integer-list line))
+				      (collect (cons e i)))))
+	      (setf labeled-list (sort  labeled-list #'< :key #'(lambda (e) (abs (car e)))))
+	      (let (found)
+		(iter (for e on labeled-list)
+		      (while (not found))
+		      (when (and (rest e)
+				 (= (- (car (first e))) (car (second e))))
+			(format stream "~a ~a~%" (cdr (first e)) (cdr (second e)))
+			(setf found t)))
+		(unless found
+		  (format stream "-1~%"))))))))
 
 
 (defun merge-sort (data)
@@ -266,13 +270,13 @@ searches through range [begin, end)"
 (define-rosalind-problem :cc
   "connected components"
   (let ((graph (make-graph-from-file *input-filename*)))
-    (with-output-to-file (stream)
-      (format stream "~a~%" (count-connected-components graph)))))
+    (write-single-output-line (count-connected-components graph))))
 
 (define-rosalind-problem :pmch
   "Perfect matchings and RNA secondary structures"
   (with-single-fasta-line (rna)
-    (* (fact (count #\A rna)) (fact (count #\G rna)))))
+    (write-single-output-line
+      (* (fact (count #\A rna)) (fact (count #\G rna))))))
 
 (defun check-heap-property (vec pred)
   (macrolet ((element (idx) `(elt vec ,idx))
@@ -332,9 +336,8 @@ searches through range [begin, end)"
 
 (define-rosalind-problem :tree
   "completing a tree"
-  (let ((graph (make-graph-from-file input-filename)))
-    (with-output-to-file (s)
-      (format s "~a~%" (1- (count-connected-components graph))))))
+  (let ((graph (make-graph-from-file *input-filename*)))
+    (write-single-output-line (1- (count-connected-components graph)))))
 
 (define-rosalind-problem :bip
   "testing bipartiteness"
@@ -436,5 +439,4 @@ searches through range [begin, end)"
 (define-rosalind-problem :inod
   "counting phylogenetic ancestors"
   (with-single-input-line (line)
-    (with-output-to-file (s)
-      (format s "~a~%" (- (parse-integer line) 2)))))
+    (write-single-output-line (- (parse-integer line) 2))))

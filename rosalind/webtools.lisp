@@ -59,6 +59,11 @@
     (with-open-file (problem-input-file *input-filename* :direction :output :if-exists :supersede)
       (format problem-input-file "~a" (rosalind-get-problem-dataset *rosalind-id*)))))
 
+(defun rosalind-resubmit (problem-id)
+  (let* ((*rosalind-id* problem-id)
+	 (*output-filename* (make-output-filename problem-id))
+	 (*rosalind-use-website* t))
+    (rosalind-maybe-submit-solution-to-website)))
 (defun rosalind-maybe-submit-solution-to-website ()
   (when *rosalind-use-website*
     (with-rosalind-session
