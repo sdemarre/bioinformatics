@@ -5,7 +5,7 @@
   :author "Serge De Marre <sdemarre@gmail.com>"
   :license "Specify license here"
   :serial t
-  :depends-on (:iterate :alexandria :cl-ppcre :split-sequence :drakma :cl-fad :parse-number)
+  :depends-on (:iterate :alexandria :cl-ppcre :split-sequence :drakma :cl-fad :parse-number :cl-html-parse)
   :components ((:file "package")
 	       (:file "utils")
                (:file "bioinformatics")

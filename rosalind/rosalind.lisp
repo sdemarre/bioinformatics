@@ -5,15 +5,18 @@
 (defparameter *input-filename* nil)
 (defparameter *output-filename* nil)
 (defparameter *rosalind-show-output* nil)
+(defmacro in-problem-context (rosalind-id &body body)
+  `(let ((*input-filename* ,(make-input-filename rosalind-id))
+	 (*output-filename* ,(make-output-filename rosalind-id))
+	 (*rosalind-id* ,rosalind-id))
+     ,@body))
 (defmacro define-rosalind-problem (rosalind-id docstring &body body)
   (let ((function-name (read-from-string (make-rosalind-function-name rosalind-id))))
     `(progn
        (setf (gethash ,rosalind-id *rosalind-id-info*) ',function-name)
        (defun ,function-name ()
 	 ,docstring
-	 (let ((*input-filename* ,(make-input-filename rosalind-id))
-	       (*output-filename* ,(make-output-filename rosalind-id))
-	       (*rosalind-id* ,rosalind-id))
+	 (in-problem-context ,rosalind-id
 	   (rosalind-maybe-get-dataset-from-website)
 	   (prog1
 	       ,@body
