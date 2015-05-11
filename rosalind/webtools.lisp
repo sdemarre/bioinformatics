@@ -20,7 +20,10 @@
   (setf *rosalind-cookies* nil))
 
 (defun rosalind-http-request (path)
-  (drakma:http-request (rosalind-url path) :cookie-jar *rosalind-cookies*))
+  (format t "|->www")
+  (prog1
+      (drakma:http-request (rosalind-url path) :cookie-jar *rosalind-cookies*)
+    (format t "|~%")))
 
 (defun get-cookie-value (cookie-jar cookie-name)
   (let ((cookie (find cookie-name (drakma:cookie-jar-cookies cookie-jar) :test #'string= :key #'drakma:cookie-name)))
@@ -30,7 +33,7 @@
 (defun login (username password)
   (format t "attempting to login to rosalind...")
   (let* ((cookies (make-instance 'drakma:cookie-jar)))
-    (rosalind-http-request "accounts/login/")
+    (drakma:http-request (rosalind-url "accounts/login") :cookie-jar cookies)
     (let ((login-result
 	   (multiple-value-list
 	    (drakma:http-request (rosalind-url "accounts/login/")
@@ -40,7 +43,9 @@
 					       ("username" . ,username)
 					       ("password" . ,password))))))
       (if (= 200 (second login-result))
-	  (setf *rosalind-cookies* cookies)
+	  (progn
+	    (format t "... login succeeded.")
+	    (setf *rosalind-cookies* cookies))
 	  (error "failed to log in. did you set *rosalind-username* and *rosalind-password* ?")))))
 
 (defun rosalind-get-problem-page (problem-id)
@@ -118,11 +123,18 @@
   (let ((nodes (find-nodes-with-tag node tag)))
     (remove-if-not #'(lambda (n) (string= (phtml-node-get-attribute n attribute) value)) nodes)))
 
-(defun list-rosalind-problems ()
+(defun list-rosalind-problem-type-urls ()
+  (let* ((problem-list-html (with-rosalind-session (rosalind-http-request "problems/list-view")))
+	 (body (second (cl-html-parse:parse-html problem-list-html)))
+	 (a-nodes (find-nodes-with-tag body :a))
+	 (a-nodes-for-location (remove-if-not #'(lambda (n) (cl-ppcre:scan "location=" (phtml-node-get-attribute n :href))) a-nodes)))
+    (cons "problems/list-view"
+	  (mapcar #'(lambda (n) (phtml-node-get-attribute n :href)) a-nodes-for-location))))
+(defun list-rosalind-problems (&optional (problem-type-url "problems/list-view"))
   (flet ((get-problem-name (aref-node)
 	   (third (split-sequence:split-sequence #\/ (phtml-node-get-attribute aref-node :href)))))
     (with-rosalind-session
-      (let ((problem-html (cl-html-parse:parse-html (rosalind-http-request "problems/list-view"))))
+      (let ((problem-html (cl-html-parse:parse-html (rosalind-http-request problem-type-url))))
 	(flet ((problems-of-type (type)
 		 (mapcar #'get-problem-name (find-nodes (second problem-html) :a :class type))))
 	  (list (list :solved (problems-of-type "solved"))
