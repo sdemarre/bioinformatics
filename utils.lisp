@@ -185,7 +185,8 @@ returns a list of positions in the genome where kmer was found."
      ,@body))
 
 (defun parse-list (string fun)
-  (mapcar fun (split-sequence:split-sequence #\Space string)))
+  (unless (zerop (length string))
+   (mapcar fun (split-sequence:split-sequence #\Space string))))
 
 (defun parse-integer-list (string)
   (parse-list string #'parse-integer))

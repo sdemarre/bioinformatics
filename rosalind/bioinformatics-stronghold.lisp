@@ -48,7 +48,7 @@
 (defun hamming-distance (dna1 dna2)
   (iter (for letter1 in-vector dna1)
 	(for letter2 in-vector dna2)
-	(counting (not (char= letter1 letter2)))))
+	(counting (not (equal letter1 letter2)))))
 (define-rosalind-problem :hamm
     "counting point mutations"
   (with-input-lines (lines)
@@ -534,3 +534,21 @@
 	 (print-integer-list (mapcar #'1+ spliced-positions) s))))))
 
 
+(defun list-possible-inversions (l)
+  (iter outer (for i from 0 to (- l 2))
+	(iter (for j from (1+ i) to (1- l))
+	      (in outer (collect (cons i j))))))
+(defun apply-inversion! (inversion v)
+  (iter (for pos from 0 to (floor (- (cdr inversion) (car inversion)) 2))
+	(let ((from (+ (car inversion) pos))
+	      (to (- (cdr inversion) pos)))
+	  (psetf (elt v from) (elt v to)
+		 (elt v to) (elt v from))))
+  v)
+(defun compute-inversion (inversion v)
+  (let ((result (copy-seq v)))
+    (apply-inversion! inversion result)
+    result))
+(defun compute-all-inversions (v)
+  (iter (for inversion in (list-possible-inversions (length v)))
+	(collect (compute-inversion inversion v))))
